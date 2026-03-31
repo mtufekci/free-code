@@ -30,6 +30,11 @@ import { logForDiagnosticsNoPII } from './utils/diagLogs.js'
 import { env } from './utils/env.js'
 import { envDynamic } from './utils/envDynamic.js'
 import { isBareMode, isEnvTruthy } from './utils/envUtils.js'
+import {
+  checkOllamaConnection,
+  getOllamaBaseURL,
+  isOllamaEnabled,
+} from './utils/model/ollama.js'
 import { errorMessage } from './utils/errors.js'
 import { findCanonicalGitRoot, findGitRoot, getIsGit } from './utils/git.js'
 import { initializeFileChangedWatcher } from './utils/hooks/fileChangedWatcher.js'
@@ -81,6 +86,30 @@ export async function setup(
   // Set custom session ID if provided
   if (customSessionId) {
     switchSession(asSessionId(customSessionId))
+  }
+
+  // Health check: warn if Ollama is enabled but unreachable
+  if (isOllamaEnabled()) {
+    const result = await checkOllamaConnection()
+    if (!result.reachable) {
+      if (result.error === 'timeout') {
+        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        console.warn(
+          chalk.yellow(
+            `Warning: Connection timeout to Ollama at ${getOllamaBaseURL()}. ` +
+              `Check that Ollama is running. Falling back to cloud provider if configured.`,
+          ),
+        )
+      } else {
+        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        console.warn(
+          chalk.yellow(
+            `Warning: Cannot connect to Ollama at ${getOllamaBaseURL()}: ${result.error}. ` +
+              `Falling back to cloud provider if configured.`,
+          ),
+        )
+      }
+    }
   }
 
   // --bare / SIMPLE: skip UDS messaging server and teammate snapshot.
