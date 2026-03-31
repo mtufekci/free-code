@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 2 of 5 (Core Chat Integration) — **IN PROGRESS**
-Plan: 2 of ~6 in current phase
-Status: Plan 02-02 complete
-Last activity: 2026-03-31 — Completed plan 02-02, Ollama client with SSE translation
+Plan: 3 of ~6 in current phase
+Status: Plan 02-03 complete
+Last activity: 2026-04-01 — Completed plan 02-03, Ollama client integrated into API routing
 
-Progress: [███░░░░░░░] 25%
+Progress: [████░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -39,6 +39,7 @@ Progress: [███░░░░░░░] 25%
 | Phase 01-foundation-health-check P03 | 1 min | 1 task | 1 file |
 | Phase 02-core-chat-integration P01 | 2 min | 1 task | 1 file |
 | Phase 02-core-chat-integration P02 | 2 min | 1 task | 1 file |
+| Phase 02-core-chat-integration P03 | 25s | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -52,6 +53,7 @@ Recent decisions affecting current work:
 - Phase 3: Tool calling requires graceful fallback for models that don't support it
 - [Phase 01-foundation-health-check]: Ollama provider check placed before firstParty in getAPIProvider() — Explicit ollama enablement should take precedence over default firstParty
 - [Phase 01-foundation-health-check P02]: Health check uses HEAD request with 5s timeout to validate TCP reachability, warns and continues on failure (cloud fallback)
+- [Phase 02-core-chat-integration P03]: Ollama check placed BEFORE Bedrock/Vertex/Foundry in getAnthropicClient() for proper precedence when multiple provider env vars set
 
 ### Pending Todos
 
@@ -63,6 +65,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31
-Stopped at: Completed 02-02-PLAN.md, Ollama client with SSE translation
+Last session: 2026-04-01
+Stopped at: Completed 02-03-PLAN.md, Ollama client integrated into API routing
 Resume file: None
