@@ -78,7 +78,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROV-01 | Phase 1 | Pending |
 | PROV-02 | Phase 1 | Pending |
 | PROV-03 | Phase 1 | Pending |
-| PROV-04 | Phase 2 | Pending |
+| PROV-04 | Phase 4 | Pending |
 | CONN-01 | Phase 1 | Pending |
 | CONN-02 | Phase 1 | Pending |
 | CONN-03 | Phase 1 | Pending |
@@ -96,7 +96,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-04 | Phase 2 | Pending |
 | ERR-01 | Phase 1 | Pending |
 | ERR-02 | Phase 1 | Pending |
-| ERR-03 | Phase 3 | Pending |
+| ERR-03 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 22 total
