@@ -20,7 +20,7 @@ export function getOllamaBaseURL(): string {
  * Defaults to 'minimax-2.7' if not configured.
  */
 export function getOllamaModel(): string {
-  return process.env.OLLAMA_MODEL || 'minimax-2.7'
+  return process.env.OLLAMA_MODEL || 'minimax-m2.7:cloud'
 }
 
 /**

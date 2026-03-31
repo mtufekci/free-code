@@ -1,5 +1,20 @@
 import { feature } from 'bun:bundle';
 
+// MACRO values are injected at build time; define fallbacks for dev mode
+// @ts-ignore - MACRO is injected by build
+if (typeof MACRO === 'undefined') {
+  // @ts-ignore
+  globalThis.MACRO = {
+    VERSION: '2.1.87-dev',
+    BUILD_TIME: new Date().toISOString(),
+    PACKAGE_URL: 'claude-code-source-snapshot',
+    NATIVE_PACKAGE_URL: undefined,
+    FEEDBACK_CHANNEL: 'github',
+    ISSUES_EXPLAINER: 'This reconstructed source snapshot does not include Anthropic internal issue routing.',
+    VERSION_CHANGELOG: 'Local development build',
+  }
+}
+
 // Bugfix for corepack auto-pinning, which adds yarnpkg to peoples' package.jsons
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 process.env.COREPACK_ENABLE_AUTO_PIN = '0';

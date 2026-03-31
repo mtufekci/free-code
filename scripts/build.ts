@@ -163,7 +163,7 @@ const cmd = [
   '--target',
   'bun',
   '--format',
-  'esm',
+  'cjs',
   '--outfile',
   outfile,
   '--minify',
