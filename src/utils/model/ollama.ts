@@ -1,4 +1,9 @@
 import { isEnvTruthy } from '../envUtils.js'
+import type {
+  OllamaListModelsResponse,
+  OllamaShowModelResponse,
+  OllamaModelContextWindow,
+} from '../../types/ollama.js'
 
 /**
  * Check if Ollama is enabled via environment variable.
@@ -64,4 +69,88 @@ export function normalizeOllamaModelName(model: string): string {
   // Pass through as-is for now, can add normalization later
   // e.g., could strip provider prefixes like 'anthropic/' if needed
   return model
+}
+
+/**
+ * List all available Ollama models.
+ * Calls GET /api/tags endpoint.
+ */
+export async function listOllamaModels(): Promise<OllamaListModelsResponse> {
+  const baseURL = getOllamaBaseURL()
+  const response = await fetch(`${baseURL}/api/tags`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to list Ollama models: ${response.statusText}`)
+  }
+
+  return response.json() as Promise<OllamaListModelsResponse>
+}
+
+/**
+ * Get detailed information about a specific Ollama model.
+ * Includes context window size and capabilities.
+ */
+export async function getOllamaModelInfo(modelName: string): Promise<OllamaShowModelResponse> {
+  const baseURL = getOllamaBaseURL()
+  const response = await fetch(`${baseURL}/api/show`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: modelName }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to get model info: ${response.statusText}`)
+  }
+
+  return response.json() as Promise<OllamaShowModelResponse>
+}
+
+/**
+ * Extract context window size from model info.
+ * Falls back to default if not determinable.
+ */
+export function extractContextWindow(modelInfo: OllamaShowModelResponse): OllamaModelContextWindow {
+  // Context window may be stored in model_info.ctx_length or similar field
+  const ctxLength = modelInfo.model_info?.context_length ??
+                    modelInfo.model_info?.['context_length'] ??
+                    4096 // Ollama default
+  const contextWindow = typeof ctxLength === 'number' ? ctxLength : 4096
+
+  // Check for vision capability
+  const supportsVision = Boolean(
+    modelInfo.model_info?.vision ?? false
+  )
+
+  // Check for tool capability (future Phase 3)
+  const supportsTools = Boolean(
+    modelInfo.model_info?.tools ?? false
+  )
+
+  return {
+    contextWindow,
+    supportsVision,
+    supportsTools,
+  }
+}
+
+/**
+ * Get the default model for Ollama if none configured.
+ * Uses first model from list if available.
+ */
+export async function getDefaultOllamaModel(): Promise<string> {
+  const configured = getOllamaModel()
+  if (configured) {
+    return configured
+  }
+
+  try {
+    const models = await listOllamaModels()
+    if (models.models.length > 0) {
+      return models.models[0].name
+    }
+  } catch {
+    // Ignore errors, fall back to default
+  }
+
+  return 'minimax-m2.7:cloud'
 }
