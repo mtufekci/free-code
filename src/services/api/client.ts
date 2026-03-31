@@ -150,6 +150,13 @@ export async function getAnthropicClient({
       fetch: resolvedFetch,
     }),
   }
+  // Check if Ollama should be used - must be before Bedrock/Foundry/Vertex checks
+  // because those env vars may also be set and we want Ollama to take precedence
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)) {
+    const { createOllamaClient } = await import('./ollama.js')
+    return createOllamaClient() as unknown as Anthropic
+  }
+
   if (isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK)) {
     const { AnthropicBedrock } = await import('@anthropic-ai/bedrock-sdk')
     // Use region override for small fast model if specified

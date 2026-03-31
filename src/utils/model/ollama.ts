@@ -51,3 +51,17 @@ export async function checkOllamaConnection(): Promise<{
     return { reachable: false, error: 'unknown error' }
   }
 }
+
+/**
+ * Normalize model string for Ollama API.
+ * Some models may need tag adjustments.
+ *
+ * @param model - Model name string (e.g., 'minimax-2.7', 'claude-3-5-sonnet')
+ * @returns Normalized model name for Ollama API
+ */
+export function normalizeOllamaModelName(model: string): string {
+  // Ollama model strings can include tags like :latest, :q4_0, etc.
+  // Pass through as-is for now, can add normalization later
+  // e.g., could strip provider prefixes like 'anthropic/' if needed
+  return model
+}
