@@ -6,7 +6,7 @@
 
 ## Phases
 
-- [x] **Phase 1: Foundation & Health Check** - Provider config, connection validation, error handling
+- [x] **Phase 1: Foundation & Health Check** - Provider config, connection validation, error handling (Complete)
 - [ ] **Phase 2: Core Chat Integration** - Streaming, completions, model discovery
 - [ ] **Phase 3: Tool Calling & Discovery** - Tool call support, context window detection
 - [ ] **Phase 4: Zero-Config Experience** - Auto-detection and suggestions
@@ -37,7 +37,7 @@
 Plans:
 - [x] 01-01-PLAN.md — Ollama provider configuration via env vars
 - [x] 01-02-PLAN.md — Startup health check with reachability validation
-- [ ] 01-03-PLAN.md — Ollama-specific error formatting
+- [x] 01-03-PLAN.md — Ollama-specific error formatting
 
 ---
 
@@ -116,7 +116,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Health Check | 2/3 | In Progress | - |
+| 1. Foundation & Health Check | 3/3 | Complete | 2026-03-31 |
 | 2. Core Chat Integration | 0/7 | Not started | - |
 | 3. Tool Calling & Discovery | 0/5 | Not started | - |
 | 4. Zero-Config Experience | 0/1 | Not started | - |
