@@ -32,7 +32,12 @@
 7. Ollama timeout and rate-limit errors are handled gracefully
 8. System can fall back to cloud provider if Ollama is unavailable when both are configured
 
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Ollama provider configuration via env vars
+- [ ] 01-02-PLAN.md — Startup health check with reachability validation
+- [ ] 01-03-PLAN.md — Ollama-specific error formatting
 
 ---
 
