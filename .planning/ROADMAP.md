@@ -58,7 +58,13 @@ Plans:
 6. System detects model context window size from Ollama API
 7. User can see which model is active and its capabilities in the REPL
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Ollama API type definitions
+- [ ] 02-02-PLAN.md — Ollama client with SSE translation (interceptor)
+- [ ] 02-03-PLAN.md — Client integration into getAnthropicClient()
+- [ ] 02-04-PLAN.md — Model discovery and listing
 
 ---
 
@@ -117,7 +123,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Health Check | 3/3 | Complete | 2026-03-31 |
-| 2. Core Chat Integration | 0/7 | Not started | - |
+| 2. Core Chat Integration | 0/4 | Not started | - |
 | 3. Tool Calling & Discovery | 0/5 | Not started | - |
 | 4. Zero-Config Experience | 0/1 | Not started | - |
 | 5. Polish & Edge Cases | 0/2 | Not started | - |
