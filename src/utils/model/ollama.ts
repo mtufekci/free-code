@@ -17,10 +17,10 @@ export function getOllamaBaseURL(): string {
 
 /**
  * Get the Ollama model name.
- * Returns undefined if not configured (caller should handle default model).
+ * Defaults to 'minimax-2.7' if not configured.
  */
-export function getOllamaModel(): string | undefined {
-  return process.env.OLLAMA_MODEL
+export function getOllamaModel(): string {
+  return process.env.OLLAMA_MODEL || 'minimax-2.7'
 }
 
 /**
