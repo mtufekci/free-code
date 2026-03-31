@@ -43,9 +43,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Error Handling
 
-- [ ] **ERR-01**: Ollama connection errors show actionable messages (not raw API errors)
-- [ ] **ERR-02**: Ollama timeout and rate-limit errors are handled gracefully
-- [ ] **ERR-03**: System can fall back to cloud provider if Ollama is unavailable (when both are configured)
+- [x] **ERR-01**: Ollama connection errors show actionable messages (not raw API errors)
+- [x] **ERR-02**: Ollama timeout and rate-limit errors are handled gracefully
+- [x] **ERR-03**: System can fall back to cloud provider if Ollama is unavailable (when both are configured)
 
 ## v2 Requirements
 
@@ -94,9 +94,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODL-02 | Phase 2 | Pending |
 | MODL-03 | Phase 3 | Pending |
 | MODL-04 | Phase 2 | Pending |
-| ERR-01 | Phase 1 | Pending |
-| ERR-02 | Phase 1 | Pending |
-| ERR-03 | Phase 1 | Pending |
+| ERR-01 | Phase 1 | Complete |
+| ERR-02 | Phase 1 | Complete |
+| ERR-03 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 22 total
