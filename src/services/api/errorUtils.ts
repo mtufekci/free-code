@@ -100,6 +100,63 @@ export function getSSLErrorHint(error: unknown): string | null {
 }
 
 /**
+ * Formats Ollama-specific connection errors into actionable messages.
+ * Replaces raw error codes with clear guidance for the user.
+ *
+ * @param error - The error caught during Ollama API calls
+ * @param baseURL - The configured Ollama base URL (used in messages)
+ */
+export function formatOllamaConnectionError(
+  error: unknown,
+  baseURL: string,
+): string {
+  const details = extractConnectionErrorDetails(error)
+
+  if (details) {
+    const { code, isSSLError } = details
+
+    // Handle timeout errors
+    if (code === 'ETIMEDOUT') {
+      return 'Ollama connection timed out. Check your network and proxy settings.'
+    }
+
+    // Handle SSL certificate errors
+    if (isSSLError) {
+      return `Ollama SSL certificate error (${code}). Check your OLLAMA_BASE_URL or corporate SSL certificates.`
+    }
+
+    // Handle connection refused
+    if (code === 'ECONNREFUSED') {
+      return `Cannot connect to Ollama at ${baseURL}. Is Ollama running?`
+    }
+  }
+
+  // Handle fetch failures (network errors without a code)
+  if (error instanceof Error) {
+    // Check if it's a fetch-related error without a specific code
+    const errorMessage = error.message
+
+    // Connection refused-like errors that may not have a code
+    if (
+      errorMessage.includes('fetch failed') ||
+      errorMessage.includes('NetworkError') ||
+      errorMessage.includes('Failed to fetch')
+    ) {
+      return `Cannot connect to Ollama at ${baseURL}. Check that Ollama is running.`
+    }
+
+    // Return actionable message if the error message is useful
+    if (errorMessage && errorMessage.length > 0 && errorMessage.length < 200) {
+      return `Ollama connection error: ${errorMessage}`
+    }
+  }
+
+  // Default fallback
+  const errorMessage = error instanceof Error ? error.message : String(error)
+  return `Ollama connection error: ${errorMessage || 'Unknown error'}`
+}
+
+/**
  * Strips HTML content (e.g., CloudFlare error pages) from a message string,
  * returning a user-friendly title or empty string if HTML is detected.
  * Returns the original message unchanged if no HTML is found.
