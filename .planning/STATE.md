@@ -34,6 +34,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: n/a
 
 *Updated after each plan completion*
+| Phase 01-foundation-health-check P01 | 2 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -45,6 +46,7 @@ Recent decisions affecting current work:
 - Phase 1: Health check via `/api/tags` endpoint
 - Phase 1: Fail fast with clear error if Ollama unreachable (no silent fallback)
 - Phase 3: Tool calling requires graceful fallback for models that don't support it
+- [Phase 01-foundation-health-check]: Ollama provider check placed before firstParty in getAPIProvider() — Explicit ollama enablement should take precedence over default firstParty
 
 ### Pending Todos
 

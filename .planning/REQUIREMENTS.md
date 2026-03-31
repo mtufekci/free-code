@@ -9,9 +9,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Provider Configuration
 
-- [ ] **PROV-01**: User can enable Ollama by setting `CLAUDE_CODE_USE_OLLAMA=true`
-- [ ] **PROV-02**: User can configure Ollama base URL via `OLLAMA_BASE_URL` env var (defaults to `http://localhost:11434`)
-- [ ] **PROV-03**: User can configure Ollama model via `OLLAMA_MODEL` env var (defaults to auto-detected)
+- [x] **PROV-01**: User can enable Ollama by setting `CLAUDE_CODE_USE_OLLAMA=true`
+- [x] **PROV-02**: User can configure Ollama base URL via `OLLAMA_BASE_URL` env var (defaults to `http://localhost:11434`)
+- [x] **PROV-03**: User can configure Ollama model via `OLLAMA_MODEL` env var (defaults to auto-detected)
 - [ ] **PROV-04**: System detects `OLLAMA_BASE_URL` or local Ollama CLI presence and suggests enabling Ollama
 
 ### Connection & Health
@@ -75,9 +75,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROV-01 | Phase 1 | Pending |
-| PROV-02 | Phase 1 | Pending |
-| PROV-03 | Phase 1 | Pending |
+| PROV-01 | Phase 1 | Complete |
+| PROV-02 | Phase 1 | Complete |
+| PROV-03 | Phase 1 | Complete |
 | PROV-04 | Phase 4 | Pending |
 | CONN-01 | Phase 1 | Pending |
 | CONN-02 | Phase 1 | Pending |
