@@ -1,9 +1,49 @@
 import { isEnvTruthy } from '../envUtils.js'
+import { which } from '../which.js'
 import type {
   OllamaListModelsResponse,
   OllamaShowModelResponse,
   OllamaModelContextWindow,
 } from '../../types/ollama.js'
+
+/**
+ * Represents Ollama availability detected on the system.
+ */
+export type OllamaAvailability = {
+  hasCli: boolean
+  hasBaseUrl: boolean
+  baseUrl: string | null
+}
+
+/**
+ * Detect Ollama availability on the system.
+ * Checks for CLI presence and OLLAMA_BASE_URL environment variable.
+ */
+export async function detectOllamaAvailability(): Promise<OllamaAvailability> {
+  const baseUrl = process.env.OLLAMA_BASE_URL || null
+  const hasBaseUrl = Boolean(baseUrl)
+  const hasCli = (await which('ollama')) !== null
+
+  return {
+    hasCli,
+    hasBaseUrl,
+    baseUrl,
+  }
+}
+
+/**
+ * Determine if we should suggest enabling Ollama.
+ * Returns true if Ollama is available (CLI or URL) but not yet enabled.
+ */
+export async function shouldSuggestOllama(): Promise<boolean> {
+  // If already enabled, don't suggest
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)) {
+    return false
+  }
+
+  const availability = await detectOllamaAvailability()
+  return availability.hasCli || availability.hasBaseUrl
+}
 
 /**
  * Check if Ollama is enabled via environment variable.
