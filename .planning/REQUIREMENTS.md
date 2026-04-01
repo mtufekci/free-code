@@ -38,7 +38,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **MODL-01**: System can list available Ollama models via `/api/tags`
 - [ ] **MODL-02**: System detects model context window size from Ollama API
-- [ ] **MODL-03**: Context window limits are respected to prevent silent truncation
+- [x] **MODL-03**: Context window limits are respected to prevent silent truncation
 - [x] **MODL-04**: User can see which model is active and its capabilities in the REPL
 
 ### Error Handling
@@ -92,7 +92,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TOOL-04 | Phase 3 | Pending |
 | MODL-01 | Phase 2 | Pending |
 | MODL-02 | Phase 2 | Pending |
-| MODL-03 | Phase 3 | Pending |
+| MODL-03 | Phase 3 | Complete |
 | MODL-04 | Phase 2 | Complete |
 | ERR-01 | Phase 1 | Complete |
 | ERR-02 | Phase 1 | Complete |
