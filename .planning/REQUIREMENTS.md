@@ -29,7 +29,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Tool Calling ( Ollama Models That Support It)
 
-- [ ] **TOOL-01**: Tool call requests are formatted for Ollama's `tool_calls` API
+- [x] **TOOL-01**: Tool call requests are formatted for Ollama's `tool_calls` API
 - [ ] **TOOL-02**: Ollama tool call responses are translated to internal format
 - [ ] **TOOL-03**: System detects when model does not support tools and falls back gracefully
 - [ ] **TOOL-04**: Tool calling is disabled for known-unsupported models with user-visible notice

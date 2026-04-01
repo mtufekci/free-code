@@ -86,7 +86,7 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Tool call request formatting (TOOL-01)
+- [x] 03-01-PLAN.md — Tool call request formatting (TOOL-01)
 - [ ] 03-02-PLAN.md — Tool call response streaming translation (TOOL-02)
 - [ ] 03-03-PLAN.md — Context window enforcement via num_ctx (MODL-03)
 - [ ] 03-04-PLAN.md — Model capability detection and graceful fallback (TOOL-03)
@@ -131,7 +131,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation & Health Check | 3/3 | Complete | 2026-03-31 |
 | 2. Core Chat Integration | 5/5 | Complete   | 2026-04-01 |
-| 3. Tool Calling & Discovery | 0/5 | Not started | - |
+| 3. Tool Calling & Discovery | 1/5 | In Progress | - |
 | 4. Zero-Config Experience | 0/1 | Not started | - |
 | 5. Polish & Edge Cases | 0/2 | Not started | - |
 

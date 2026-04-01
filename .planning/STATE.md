@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 ## Current Position
 
-Phase: 2 of 5 (Core Chat Integration) — **IN PROGRESS**
-Plan: 5 of ~6 in current phase
-Status: Plan 02-05 complete
-Last activity: 2026-04-01 — Completed plan 02-05, Ollama model display in status line
+Phase: 3 of 5 (Tool Calling & Discovery) — **IN PROGRESS**
+Plan: 1 of ~5 in current phase
+Status: Plan 03-01 complete
+Last activity: 2026-04-01 — Completed plan 03-01, tool schema translation
 
-Progress: [█████░░░░░] 42%
+Progress: [██████░░░░] 52%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: ~90s
-- Total execution time: ~12 min
+- Total execution time: ~13 min
 
 **By Phase:**
 
@@ -42,6 +42,7 @@ Progress: [█████░░░░░] 42%
 | Phase 02-core-chat-integration P03 | 25s | 2 tasks | 2 files |
 | Phase 02-core-chat-integration P04 | 2 min | 1 task | 1 file |
 | Phase 02-core-chat-integration P05 | 87s | 1 task | 1 file |
+| Phase 03-tool-calling-and-discovery P01 | 1 min | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -68,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-01
-Stopped at: Completed 02-05-PLAN.md, Ollama model display in status line
+Stopped at: Completed 03-01-PLAN.md, tool schema translation
 Resume file: None
