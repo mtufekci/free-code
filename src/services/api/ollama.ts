@@ -167,7 +167,8 @@ function translateRequestToOllama(
     }
   }
 
-  return {
+  // Build the base request
+  const ollamaRequest: OllamaChatRequest = {
     model: params.model,
     messages: ollamaMessages,
     stream: true,
@@ -178,6 +179,22 @@ function translateRequestToOllama(
       stop: params.stop_sequences,
     },
   }
+
+  // Translate Anthropic tools to Ollama format
+  // Anthropic: {name, description?, input}
+  // Ollama: {type: "function", function: {name, description?, parameters?}}
+  if (params.tools && params.tools.length > 0) {
+    ollamaRequest.tools = params.tools.map((tool) => ({
+      type: 'function' as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.input,
+      },
+    }))
+  }
+
+  return ollamaRequest
 }
 
 /**
