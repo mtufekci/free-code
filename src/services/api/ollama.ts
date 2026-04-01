@@ -133,6 +133,7 @@ export interface StreamResult {
 function translateRequestToOllama(
   params: MessageCreateParams,
   contextWindow?: number,
+  supportsTools?: boolean,
 ): OllamaChatRequest {
   const ollamaMessages: OllamaMessage[] = []
 
@@ -186,7 +187,8 @@ function translateRequestToOllama(
   // Translate Anthropic tools to Ollama format
   // Anthropic: {name, description?, input}
   // Ollama: {type: "function", function: {name, description?, parameters?}}
-  if (params.tools && params.tools.length > 0) {
+  // Only include tools if the model supports them
+  if (supportsTools && params.tools && params.tools.length > 0) {
     ollamaRequest.tools = params.tools.map((tool) => ({
       type: 'function' as const,
       function: {
@@ -484,19 +486,22 @@ export function createOllamaClient(): {
             withResponse: async (): Promise<StreamResult> => {
               const baseURL = getOllamaBaseURL()
 
-              // Fetch model info to get context window for num_ctx enforcement
+              // Fetch model info to get context window and tool capability
               // This prevents silent truncation when context exceeds model's limit
+              // and ensures tools are only sent to models that support them
               let contextWindow: number | undefined
+              let supportsTools = false
               try {
                 const modelInfo = await getOllamaModelInfo(params.model)
                 const extracted = extractContextWindow(modelInfo)
                 contextWindow = extracted.contextWindow
+                supportsTools = extracted.supportsTools ?? false
               } catch {
-                // Model info fetch failed - continue without num_ctx (Ollama will use default)
-                console.warn(`[Ollama] Failed to get model info for ${params.model}, proceeding without num_ctx`)
+                // Model info fetch failed - continue without num_ctx and without tools (safer defaults)
+                console.warn(`[Ollama] Failed to get model info for ${params.model}, proceeding without num_ctx and without tools`)
               }
 
-              const ollamaRequest = translateRequestToOllama(params, contextWindow)
+              const ollamaRequest = translateRequestToOllama(params, contextWindow, supportsTools)
 
               const fetchOptions: RequestInit = {
                 method: 'POST',
