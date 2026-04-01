@@ -124,7 +124,11 @@ Plans:
 1. All Phase 1-4 success criteria continue to pass
 2. No regressions in existing cloud provider functionality
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Edge case handling (empty models, missing context window, connection drops)
+- [ ] 05-02-PLAN.md — UX polish and regression verification
 
 ---
 

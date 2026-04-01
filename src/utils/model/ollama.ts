@@ -114,56 +114,95 @@ export function normalizeOllamaModelName(model: string): string {
 /**
  * List all available Ollama models.
  * Calls GET /api/tags endpoint.
+ * Returns empty models array if Ollama returns empty or invalid response.
  */
 export async function listOllamaModels(): Promise<OllamaListModelsResponse> {
   const baseURL = getOllamaBaseURL()
-  const response = await fetch(`${baseURL}/api/tags`)
+  try {
+    const response = await fetch(`${baseURL}/api/tags`)
 
-  if (!response.ok) {
-    throw new Error(`Failed to list Ollama models: ${response.statusText}`)
+    if (!response.ok) {
+      return { models: [] }
+    }
+
+    const data = await response.json() as OllamaListModelsResponse
+    return { models: data.models || [] }
+  } catch {
+    return { models: [] }
   }
-
-  return response.json() as Promise<OllamaListModelsResponse>
 }
 
 /**
  * Get detailed information about a specific Ollama model.
  * Includes context window size and capabilities.
+ * Returns null if model lookup fails (e.g., model doesn't exist).
  */
-export async function getOllamaModelInfo(modelName: string): Promise<OllamaShowModelResponse> {
+export async function getOllamaModelInfo(modelName: string): Promise<OllamaShowModelResponse | null> {
   const baseURL = getOllamaBaseURL()
-  const response = await fetch(`${baseURL}/api/show`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: modelName }),
-  })
+  try {
+    const response = await fetch(`${baseURL}/api/show`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: modelName }),
+    })
 
-  if (!response.ok) {
-    throw new Error(`Failed to get model info: ${response.statusText}`)
+    if (!response.ok) {
+      return null
+    }
+
+    return response.json() as Promise<OllamaShowModelResponse>
+  } catch {
+    return null
   }
-
-  return response.json() as Promise<OllamaShowModelResponse>
 }
 
 /**
  * Extract context window size from model info.
- * Falls back to default if not determinable.
+ * Falls back to default (4096) if not determinable.
+ *
+ * @param modelInfo - Model info from Ollama API (can be null/undefined)
+ * @returns Context window size and capabilities
  */
-export function extractContextWindow(modelInfo: OllamaShowModelResponse): OllamaModelContextWindow {
-  // Context window may be stored in model_info.ctx_length or similar field
-  const ctxLength = modelInfo.model_info?.context_length ??
-                    modelInfo.model_info?.['context_length'] ??
-                    4096 // Ollama default
-  const contextWindow = typeof ctxLength === 'number' ? ctxLength : 4096
+export function extractContextWindow(modelInfo: OllamaShowModelResponse | null | undefined): OllamaModelContextWindow {
+  // Default context window for Ollama
+  const DEFAULT_CONTEXT_WINDOW = 4096
+
+  // Handle null/undefined modelInfo
+  if (!modelInfo) {
+    return {
+      contextWindow: DEFAULT_CONTEXT_WINDOW,
+      supportsVision: false,
+      supportsTools: false,
+    }
+  }
+
+  // Extract context_length with defensive checks
+  let ctxLength: number | undefined
+  if (modelInfo.model_info) {
+    // Try various field names Ollama might use
+    ctxLength = (modelInfo.model_info as Record<string, unknown>).context_length as number
+      ?? (modelInfo.model_info as Record<string, unknown>)['context_length'] as number
+      ?? (modelInfo.model_info as Record<string, unknown>)['contextWindow'] as number
+      ?? undefined
+  }
+
+  // Validate ctxLength is a proper number
+  const contextWindow = typeof ctxLength === 'number' && ctxLength > 0 ? ctxLength : DEFAULT_CONTEXT_WINDOW
 
   // Check for vision capability
   const supportsVision = Boolean(
-    modelInfo.model_info?.vision ?? false
+    modelInfo.model_info && (
+      (modelInfo.model_info as Record<string, unknown>).vision
+      ?? (modelInfo.model_info as Record<string, unknown>)['vision']
+    ),
   )
 
   // Check for tool capability (future Phase 3)
   const supportsTools = Boolean(
-    modelInfo.model_info?.tools ?? false
+    modelInfo.model_info && (
+      (modelInfo.model_info as Record<string, unknown>).tools
+      ?? (modelInfo.model_info as Record<string, unknown>)['tools']
+    ),
   )
 
   return {
@@ -192,7 +231,22 @@ export async function getDefaultOllamaModel(): Promise<string> {
     // Ignore errors, fall back to default
   }
 
+  console.warn('[Ollama] No models available from Ollama, using fallback: minimax-m2.7:cloud')
   return 'minimax-m2.7:cloud'
+}
+
+/**
+ * Get a model or throw if none available.
+ * Use this when we cannot proceed without a model.
+ */
+export function getOllamaModelOrDie(): string {
+  const configured = getOllamaModel()
+  if (configured) {
+    return configured
+  }
+  throw new Error(
+    'No Ollama model configured. Set OLLAMA_MODEL environment variable or ensure Ollama has models available.',
+  )
 }
 
 /**

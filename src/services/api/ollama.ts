@@ -362,12 +362,13 @@ function translateEventToAnthropic(
 /**
  * Parses SSE stream from Ollama response
  * Yields parsed OllamaChatResponse objects
+ * Handles connection drops gracefully.
  */
 async function* parseSSEStream(
   response: Response,
 ): AsyncGenerator<OllamaChatResponse> {
   if (!response.body) {
-    throw new Error('Response body is null')
+    return
   }
 
   const reader = response.body.getReader()
@@ -376,40 +377,53 @@ async function* parseSSEStream(
 
   try {
     while (true) {
-      const { done, value } = await reader.read()
-
-      if (done) {
-        // Process any remaining buffer
-        if (buffer.startsWith('data: ')) {
-          try {
-            yield JSON.parse(buffer.slice(6)) as OllamaChatResponse
-          } catch {
-            // Ignore parse errors on final chunk
+      let value: Uint8Array | undefined
+      try {
+        const result = await reader.read()
+        value = result.value
+        if (result.done) {
+          // Process any remaining buffer
+          if (buffer.startsWith('data: ')) {
+            try {
+              yield JSON.parse(buffer.slice(6)) as OllamaChatResponse
+            } catch {
+              // Ignore parse errors on final chunk
+            }
           }
+          break
         }
+      } catch (error) {
+        // Connection drop or read error - terminate gracefully
+        console.warn('[Ollama] Connection interrupted while reading stream')
         break
       }
 
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
+      if (value) {
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6)
-          if (data === '[DONE]') {
-            return
-          }
-          try {
-            yield JSON.parse(data) as OllamaChatResponse
-          } catch {
-            // Skip malformed JSON
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') {
+              return
+            }
+            try {
+              yield JSON.parse(data) as OllamaChatResponse
+            } catch {
+              // Skip malformed JSON
+            }
           }
         }
       }
     }
   } finally {
-    reader.releaseLock()
+    try {
+      reader.releaseLock()
+    } catch {
+      // Ignore release errors
+    }
   }
 }
 
@@ -494,8 +508,8 @@ export function createOllamaClient(): {
               // and ensures tools are only sent to models that support them
               let contextWindow: number | undefined
               let supportsTools = false
-              try {
-                const modelInfo = await getOllamaModelInfo(params.model)
+              const modelInfo = await getOllamaModelInfo(params.model)
+              if (modelInfo !== null) {
                 const extracted = extractContextWindow(modelInfo)
                 contextWindow = extracted.contextWindow
                 supportsTools = extracted.supportsTools ?? false
@@ -506,7 +520,7 @@ export function createOllamaClient(): {
                   console.warn(`[Ollama] ${message}`)
                   hasWarnedAboutToolsDisabled = true
                 }
-              } catch {
+              } else {
                 // Model info fetch failed - continue without num_ctx and without tools (safer defaults)
                 console.warn(`[Ollama] Failed to get model info for ${params.model}, proceeding without num_ctx and without tools`)
               }
