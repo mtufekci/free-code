@@ -18,7 +18,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **CONN-01**: System performs Ollama health check on startup when enabled
 - [x] **CONN-02**: System warns and continues if Ollama endpoint is unreachable (with fallback to cloud)
-- [ ] **CONN-03**: System validates Ollama API version compatibility on connect
+- [x] **CONN-03**: System validates Ollama API version compatibility on connect
 
 ### Chat Completions
 
@@ -81,7 +81,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROV-04 | Phase 4 | Pending |
 | CONN-01 | Phase 1 | Complete |
 | CONN-02 | Phase 1 | Partial - plan specifies warn-and-continue (not fail-fast) |
-| CONN-03 | Phase 1 | Pending |
+| CONN-03 | Phase 1 | Complete |
 | CHAT-01 | Phase 2 | Pending |
 | CHAT-02 | Phase 2 | Pending |
 | CHAT-03 | Phase 2 | Pending |
