@@ -8,7 +8,7 @@
 
 - [x] **Phase 1: Foundation & Health Check** - Provider config, connection validation, error handling (Complete)
 - [x] **Phase 2: Core Chat Integration** - Streaming, completions, model discovery (completed 2026-04-01)
-- [ ] **Phase 3: Tool Calling & Discovery** - Tool call support, context window detection
+- [x] **Phase 3: Tool Calling & Discovery** - Tool call support, context window detection (completed 2026-04-01)
 - [ ] **Phase 4: Zero-Config Experience** - Auto-detection and suggestions
 - [ ] **Phase 5: Polish & Edge Cases** - UX refinement
 
@@ -83,7 +83,7 @@ Plans:
 4. Tool calling is disabled for known-unsupported models with user-visible notice
 5. Context window limits are respected to prevent silent truncation
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 03-01-PLAN.md — Tool call request formatting (TOOL-01)
@@ -105,7 +105,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
 1. System detects `OLLAMA_BASE_URL` or local Ollama CLI presence and suggests enabling Ollama
 
-**Plans:** TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 04-01-PLAN.md — Zero-config Ollama detection and suggestion
 
 ---
 
@@ -131,7 +134,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation & Health Check | 3/3 | Complete | 2026-03-31 |
 | 2. Core Chat Integration | 5/5 | Complete   | 2026-04-01 |
-| 3. Tool Calling & Discovery | 4/5 | In Progress|  |
+| 3. Tool Calling & Discovery | 4/5 | Complete    | 2026-04-01 |
 | 4. Zero-Config Experience | 0/1 | Not started | - |
 | 5. Polish & Edge Cases | 0/2 | Not started | - |
 
