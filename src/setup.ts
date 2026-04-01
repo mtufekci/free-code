@@ -97,7 +97,18 @@ export async function setup(
         console.warn(
           chalk.yellow(
             `Warning: Connection timeout to Ollama at ${getOllamaBaseURL()}. ` +
-              `Check that Ollama is running. Falling back to cloud provider if configured.`,
+              `Is Ollama running? Start with: ollama serve. ` +
+              `Is the URL correct? Currently: ${getOllamaBaseURL()}. ` +
+              `Falling back to cloud provider if configured.`,
+          ),
+        )
+      } else if (result.error === 'rate_limited') {
+        // biome-ignore lint/suspicious/noConsole:: intentional console output
+        console.warn(
+          chalk.yellow(
+            `Warning: Ollama at ${getOllamaBaseURL()} is rate limited. ` +
+              `Ollama has a 5-minute rate limit on API requests. ` +
+              `Wait a few minutes and try again, or fall back to cloud provider if configured.`,
           ),
         )
       } else {
@@ -105,6 +116,8 @@ export async function setup(
         console.warn(
           chalk.yellow(
             `Warning: Cannot connect to Ollama at ${getOllamaBaseURL()}: ${result.error}. ` +
+              `Check if Ollama is installed: ollama run llama3.2. ` +
+              `Check firewall settings. ` +
               `Falling back to cloud provider if configured.`,
           ),
         )

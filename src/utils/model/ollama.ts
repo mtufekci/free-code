@@ -75,15 +75,18 @@ export function getOllamaModel(): string {
  */
 export async function checkOllamaConnection(): Promise<{
   reachable: boolean
-  error?: string
+  error?: 'timeout' | 'rate_limited' | 'connection' | string
 }> {
   const baseURL = getOllamaBaseURL()
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 5000)
 
   try {
-    await fetch(baseURL, { method: 'HEAD', signal: controller.signal })
+    const response = await fetch(baseURL, { method: 'HEAD', signal: controller.signal })
     clearTimeout(timeout)
+    if (response.status === 429) {
+      return { reachable: false, error: 'rate_limited' }
+    }
     return { reachable: true }
   } catch (error) {
     clearTimeout(timeout)
@@ -91,7 +94,7 @@ export async function checkOllamaConnection(): Promise<{
       if (error.name === 'AbortError') {
         return { reachable: false, error: 'timeout' }
       }
-      return { reachable: false, error: error.message }
+      return { reachable: false, error: 'connection' }
     }
     return { reachable: false, error: 'unknown error' }
   }
