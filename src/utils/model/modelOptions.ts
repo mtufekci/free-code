@@ -2,6 +2,7 @@
 import { getInitialMainLoopModel } from '../../bootstrap/state.js'
 import {
   isClaudeAISubscriber,
+  isCodexSubscriber,
   isMaxSubscriber,
   isTeamPremiumSubscriber,
 } from '../auth.js'
@@ -242,6 +243,34 @@ function getHaikuOption(): ModelOption {
     : getHaiku35Option()
 }
 
+// OpenAI Codex model options
+function getGpt54Option(): ModelOption {
+  return {
+    value: 'gpt-5.4',
+    label: 'GPT-5.4',
+    description: 'GPT-5.4 · Advanced reasoning and code generation',
+    descriptionForModel: 'GPT-5.4 - advanced reasoning and code generation capabilities',
+  }
+}
+
+function getGpt53CodexOption(): ModelOption {
+  return {
+    value: 'gpt-5.3-codex',
+    label: 'GPT-5.3 Codex',
+    description: 'GPT-5.3 Codex · Optimized for code generation and understanding',
+    descriptionForModel: 'GPT-5.3 Codex - specialized for code generation and understanding',
+  }
+}
+
+function getGpt54MiniOption(): ModelOption {
+  return {
+    value: 'gpt-5.4-mini',
+    label: 'GPT-5.4 Mini',
+    description: 'GPT-5.4 Mini · Fast and efficient for simple tasks',
+    descriptionForModel: 'GPT-5.4 Mini - fast and efficient for simple coding tasks',
+  }
+}
+
 function getMaxOpusOption(fastMode = false): ModelOption {
   return {
     value: 'opus',
@@ -340,6 +369,16 @@ function getModelOptionsBase(fastMode = false): ModelOption[] {
       getSonnet46Option(),
       getSonnet46_1MOption(),
       getHaiku45Option(),
+    ]
+  }
+
+  // Codex subscribers get OpenAI model options
+  if (isCodexSubscriber()) {
+    return [
+      getDefaultOptionForUser(),
+      getGpt54Option(),
+      getGpt53CodexOption(),
+      getGpt54MiniOption(),
     ]
   }
 

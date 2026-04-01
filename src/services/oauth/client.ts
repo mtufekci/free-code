@@ -43,6 +43,34 @@ export function parseScopes(scopeString?: string): string[] {
   return scopeString?.split(' ').filter(Boolean) ?? []
 }
 
+export function buildOpenAIAuthUrl({
+  codeChallenge,
+  state,
+  port,
+  isManual,
+}: {
+  codeChallenge: string
+  state: string
+  port: number
+  isManual: boolean
+}): string {
+  const authUrl = new URL(getOauthConfig().OPENAI_AUTHORIZE_URL)
+  authUrl.searchParams.append('client_id', getOauthConfig().OPENAI_CLIENT_ID)
+  authUrl.searchParams.append('response_type', 'code')
+  authUrl.searchParams.append(
+    'redirect_uri',
+    isManual
+      ? getOauthConfig().MANUAL_REDIRECT_URL
+      : `http://localhost:${port}/callback`,
+  )
+  authUrl.searchParams.append('scope', 'openai')
+  authUrl.searchParams.append('code_challenge', codeChallenge)
+  authUrl.searchParams.append('code_challenge_method', 'S256')
+  authUrl.searchParams.append('state', state)
+
+  return authUrl.toString()
+}
+
 export function buildAuthUrl({
   codeChallenge,
   state,

@@ -227,6 +227,18 @@ export type GlobalConfig = {
   hasSeenUltraplanTerms?: boolean // ant-only: whether the one-time CCR terms notice has been shown in the ultraplan launch dialog
   hasResetAutoModeOptInForDefaultOffer?: boolean // ant-only: one-shot migration guard, re-prompts churned auto-mode users
   oauthAccount?: AccountInfo
+
+  /**
+   * OpenAI Codex OAuth tokens, stored separately from Anthropic credentials.
+   * These are acquired via the Codex OAuth flow (auth.openai.com) and are used
+   * as Bearer tokens against OpenAI's API — they are never sent to Anthropic servers.
+   */
+  codexOAuth?: {
+    accessToken: string
+    refreshToken: string
+    expiresAt: number
+    accountId: string
+  }
   iterm2KeyBindingInstalled?: boolean // Legacy - keeping for backward compatibility
   editorMode?: EditorMode
   bypassPermissionsModeAccepted?: boolean
@@ -575,6 +587,14 @@ export type GlobalConfig = {
   // CURRENT_MIGRATION_VERSION, runMigrations() skips all sync migrations
   // (avoiding 11× saveGlobalConfig lock+re-read on every startup).
   migrationVersion?: number
+
+  // OpenAI OAuth tokens for Codex API access
+  openaiOauthTokens?: {
+    access_token: string
+    refresh_token?: string
+    scopes?: string[]
+    expires_at?: number
+  }
 }
 
 /**

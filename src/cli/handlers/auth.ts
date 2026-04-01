@@ -27,6 +27,7 @@ import {
   getOauthAccountInfo,
   getSubscriptionType,
   isUsing3PServices,
+  saveCodexOAuthTokens,
   saveOAuthTokensIfNeeded,
   validateForceLoginOrg,
 } from '../../utils/auth.js'
@@ -42,6 +43,16 @@ import {
   buildAccountProperties,
   buildAPIProviderProperties,
 } from '../../utils/status.js'
+
+/**
+ * Returns true if the token carries any Anthropic-issued scope (user:* or org:*).
+ * Codex tokens use OpenID Connect scopes (openid, profile, email, offline_access)
+ * which are not Anthropic scopes, so this returns false for them.
+ */
+function hasAnyAnthropicScope(scopes: string[] | undefined): boolean {
+  if (!scopes?.length) return false
+  return scopes.some((s) => s.startsWith('user:') || s.startsWith('org:'))
+}
 
 /**
  * Shared post-token-acquisition logic. Saves tokens, fetches profile/roles,
@@ -96,7 +107,7 @@ export async function installOAuthTokens(tokens: OAuthTokens): Promise<void> {
     await fetchAndStoreClaudeCodeFirstTokenDate().catch(err =>
       logForDebugging(String(err), { level: 'error' }),
     )
-  } else {
+  } else if (hasAnyAnthropicScope(tokens.scopes)) {
     // API key creation is critical for Console users — let it throw.
     const apiKey = await createAndStoreApiKey(tokens.accessToken)
     if (!apiKey) {
@@ -104,6 +115,16 @@ export async function installOAuthTokens(tokens: OAuthTokens): Promise<void> {
         'Unable to create API key. The server accepted the request but did not return a key.',
       )
     }
+  } else {
+    // Third-party provider (e.g. OpenAI Codex) — tokens carry no Anthropic
+    // scopes. Skip Anthropic API key creation entirely and store the tokens
+    // in their own dedicated config slot.
+    saveCodexOAuthTokens({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken ?? '',
+      expiresAt: tokens.expiresAt ?? Date.now() + 3600_000,
+      accountId: (tokens.tokenAccount?.uuid ?? ''),
+    })
   }
 
   await clearAuthRelatedCaches()

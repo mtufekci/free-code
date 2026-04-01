@@ -24,6 +24,7 @@ import {
   refreshOAuthToken,
   shouldUseClaudeAIAuth,
 } from '../services/oauth/client.js'
+import type { CodexTokens } from '../services/oauth/codex-client.js'
 import { getOauthProfileFromOauthToken } from '../services/oauth/getOauthProfile.js'
 import type { OAuthTokens, SubscriptionType } from '../services/oauth/types.js'
 import {
@@ -1321,6 +1322,62 @@ export function clearOAuthTokenCache(): void {
   clearKeychainCache()
 }
 
+// ── Codex OAuth token storage ────────────────────────────────────────────────
+// These functions manage OpenAI Codex tokens separately from Anthropic's
+// claudeAiOauth keychain entry. Codex tokens are stored in the GlobalConfig
+// JSON file (not in the system keychain) and are only ever sent to OpenAI's
+// API, never to Anthropic's servers.
+
+/**
+ * Saves the OpenAI Codex OAuth tokens to GlobalConfig.
+ * Does NOT overwrite or interfere with Anthropic's claudeAiOauth block.
+ */
+export function saveCodexOAuthTokens(tokens: CodexTokens): void {
+  saveGlobalConfig((cfg) => ({
+    ...cfg,
+    codexOAuth: {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt,
+      accountId: tokens.accountId,
+    },
+  }))
+}
+
+/**
+ * Retrieves the stored Codex OAuth tokens from GlobalConfig.
+ * Returns null if no Codex tokens are stored.
+ */
+export function getCodexOAuthTokens(): CodexTokens | null {
+  const cfg = getGlobalConfig()
+  const stored = cfg.codexOAuth
+  if (
+    !stored?.accessToken ||
+    !stored.refreshToken ||
+    !stored.expiresAt ||
+    !stored.accountId
+  ) {
+    return null
+  }
+  return {
+    accessToken: stored.accessToken,
+    refreshToken: stored.refreshToken,
+    expiresAt: stored.expiresAt,
+    accountId: stored.accountId,
+  }
+}
+
+/**
+ * Removes Codex OAuth tokens from GlobalConfig (e.g., on logout).
+ */
+export function clearCodexOAuthTokens(): void {
+  saveGlobalConfig((cfg) => {
+    const { codexOAuth: _removed, ...rest } = cfg
+    return rest as typeof cfg
+  })
+}
+
+
 let lastCredentialsMtimeMs = 0
 
 // Cross-process staleness: another CC instance may write fresh tokens to
@@ -1578,6 +1635,17 @@ export function isClaudeAISubscriber(): boolean {
   }
 
   return shouldUseClaudeAIAuth(getClaudeAIOAuthTokens()?.scopes)
+}
+
+export function isCodexSubscriber(): boolean {
+  // Only treat as Codex subscriber when explicitly using OpenAI provider
+  if (getAPIProvider() !== 'openai') {
+    return false
+  }
+
+  // Verify we actually have valid Codex tokens
+  const tokens = getCodexOAuthTokens()
+  return !!tokens?.accessToken
 }
 
 /**
