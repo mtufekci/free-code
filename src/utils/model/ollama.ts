@@ -154,3 +154,33 @@ export async function getDefaultOllamaModel(): Promise<string> {
 
   return 'minimax-m2.7:cloud'
 }
+
+/**
+ * Get tool capability status and message for a model.
+ * Returns whether tools are enabled and an appropriate message if not.
+ */
+export function getToolCapabilityMessage(modelInfo: OllamaShowModelResponse | null): {
+  enabled: boolean
+  message: string
+} {
+  if (modelInfo === null) {
+    return {
+      enabled: false,
+      message: 'Could not determine tool capability',
+    }
+  }
+
+  const { supportsTools } = extractContextWindow(modelInfo)
+
+  if (supportsTools) {
+    return {
+      enabled: true,
+      message: '',
+    }
+  }
+
+  return {
+    enabled: false,
+    message: 'Tools disabled: model does not support tool calling',
+  }
+}
