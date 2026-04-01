@@ -30,7 +30,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Tool Calling ( Ollama Models That Support It)
 
 - [x] **TOOL-01**: Tool call requests are formatted for Ollama's `tool_calls` API
-- [ ] **TOOL-02**: Ollama tool call responses are translated to internal format
+- [x] **TOOL-02**: Ollama tool call responses are translated to internal format
 - [ ] **TOOL-03**: System detects when model does not support tools and falls back gracefully
 - [ ] **TOOL-04**: Tool calling is disabled for known-unsupported models with user-visible notice
 
@@ -87,7 +87,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CHAT-03 | Phase 2 | Pending |
 | CHAT-04 | Phase 2 | Pending |
 | TOOL-01 | Phase 3 | Pending |
-| TOOL-02 | Phase 3 | Pending |
+| TOOL-02 | Phase 3 | Complete |
 | TOOL-03 | Phase 3 | Pending |
 | TOOL-04 | Phase 3 | Pending |
 | MODL-01 | Phase 2 | Pending |
