@@ -5,10 +5,11 @@
 All telemetry stripped. All injected security-prompt guardrails removed. All experimental features unlocked. Full local LLM support via Ollama. WebBrowser tool with Playwright. One binary, zero callbacks home.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paoloanzn/free-code/main/install.sh | bash
+git clone https://github.com/mtufekci/free-code.git
+cd free-code && bun install && bun run build:dev
 ```
 
-> Checks your system, installs Bun if needed, clones, builds with all features enabled, and puts `free-code` on your PATH. Works with Anthropic API keys **or** local Ollama models.
+> Clone, install, build — then run `./cli-dev`. Works with Anthropic API keys **or** local Ollama models.
 
 <p align="center">
   <img src="assets/screenshot.png" alt="free-code screenshot" width="800" />
@@ -95,15 +96,22 @@ See [FEATURES.md](FEATURES.md) for the full audit of all 88 flags and their stat
 ## Quick install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paoloanzn/free-code/main/install.sh | bash
+git clone https://github.com/mtufekci/free-code.git
+cd free-code
+bun install
+bun run build:dev
 ```
 
-This will check your system, install Bun if needed, clone the repo, build the binary with all experimental features enabled, and symlink it as `free-code` on your PATH.
-
-After install, just run:
+After build, run with Anthropic or Ollama:
 ```bash
+# With Anthropic API
 export ANTHROPIC_API_KEY="sk-ant-..."
-free-code
+./cli-dev
+
+# With Ollama (no API key needed)
+export CLAUDE_CODE_USE_OLLAMA=1
+export OLLAMA_MODEL=qwen3:8b
+./cli-dev
 ```
 
 ---
@@ -131,8 +139,8 @@ ollama pull qwen3:8b
 
 ```bash
 # Clone the repo
-git clone https://github.com/paoloanzn/claude-code.git
-cd claude-code
+git clone https://github.com/mtufekci/free-code.git
+cd free-code
 
 # Install dependencies
 bun install
