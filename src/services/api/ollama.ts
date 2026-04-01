@@ -16,7 +16,7 @@ import type {
   OllamaChatResponse,
   OllamaMessage,
 } from 'src/types/ollama.js'
-import { getOllamaBaseURL, getOllamaModel } from 'src/utils/model/ollama.js'
+import { getOllamaBaseURL, getOllamaModel, getOllamaModelInfo, extractContextWindow } from 'src/utils/model/ollama.js'
 import { formatOllamaConnectionError } from 'src/services/api/errorUtils.js'
 
 /**
@@ -132,6 +132,7 @@ export interface StreamResult {
  */
 function translateRequestToOllama(
   params: MessageCreateParams,
+  contextWindow?: number,
 ): OllamaChatRequest {
   const ollamaMessages: OllamaMessage[] = []
 
@@ -177,6 +178,8 @@ function translateRequestToOllama(
       top_p: params.top_p,
       num_predict: params.max_tokens,
       stop: params.stop_sequences,
+      // Enforce context window to prevent silent truncation
+      ...(contextWindow && contextWindow > 0 ? { num_ctx: contextWindow } : {}),
     },
   }
 
@@ -208,6 +211,8 @@ function mapStopReason(
       return 'end_turn'
     case 'length':
       return 'max_tokens'
+    case 'model_full':
+      return 'end_turn' // Context window exceeded - treated as natural end
     case 'tool':
       return null // Tool calls handled separately
     default:
@@ -478,7 +483,20 @@ export function createOllamaClient(): {
           return {
             withResponse: async (): Promise<StreamResult> => {
               const baseURL = getOllamaBaseURL()
-              const ollamaRequest = translateRequestToOllama(params)
+
+              // Fetch model info to get context window for num_ctx enforcement
+              // This prevents silent truncation when context exceeds model's limit
+              let contextWindow: number | undefined
+              try {
+                const modelInfo = await getOllamaModelInfo(params.model)
+                const extracted = extractContextWindow(modelInfo)
+                contextWindow = extracted.contextWindow
+              } catch {
+                // Model info fetch failed - continue without num_ctx (Ollama will use default)
+                console.warn(`[Ollama] Failed to get model info for ${params.model}, proceeding without num_ctx`)
+              }
+
+              const ollamaRequest = translateRequestToOllama(params, contextWindow)
 
               const fetchOptions: RequestInit = {
                 method: 'POST',
