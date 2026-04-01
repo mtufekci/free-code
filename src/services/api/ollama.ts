@@ -239,33 +239,95 @@ function translateEventToAnthropic(
     },
   })
 
-  // Content block start
-  events.push({
-    type: 'content_block_start',
-    index: 0,
-    content_block: {
-      type: 'text',
-      text: '',
-    },
-  })
+  // Check if this is a tool call response
+  const hasToolCalls =
+    event.message.tool_calls && event.message.tool_calls.length > 0
 
-  // Content delta - the actual message content
-  if (event.message.content) {
+  if (hasToolCalls) {
+    // Tool call detected - emit tool_use content block sequence
+    const toolCall = event.message.tool_calls![0]
+    const toolName = toolCall.function.name
+
+    // Parse arguments - Ollama returns arguments as JSON string or object
+    let partialJson = ''
+    const args = toolCall.function.arguments
+    if (typeof args === 'string') {
+      // Arguments is a JSON string - parse and re-stringify to validate
+      try {
+        JSON.parse(args) // Validate it's valid JSON
+        partialJson = args
+      } catch {
+        // Invalid JSON, emit empty partial
+        console.warn(
+          `[Ollama] Tool "${toolName}" received invalid JSON arguments:`,
+          args,
+        )
+        partialJson = ''
+      }
+    } else if (typeof args === 'object' && args !== null) {
+      // Arguments is already an object - stringify to JSON
+      try {
+        partialJson = JSON.stringify(args)
+      } catch {
+        partialJson = ''
+      }
+    }
+
+    // Content block start with tool_use type
+    events.push({
+      type: 'content_block_start',
+      index: 0,
+      content_block: {
+        type: 'tool_use',
+        name: toolName,
+        input: '',
+      },
+    })
+
+    // Content block delta with input_json_delta
     events.push({
       type: 'content_block_delta',
       index: 0,
       delta: {
-        type: 'text_delta',
-        text: event.message.content,
+        type: 'input_json_delta',
+        partial_json: partialJson,
       },
     })
-  }
 
-  // Content block stop
-  events.push({
-    type: 'content_block_stop',
-    index: 0,
-  })
+    // Content block stop
+    events.push({
+      type: 'content_block_stop',
+      index: 0,
+    })
+  } else {
+    // No tool call - emit text content block (existing behavior)
+    events.push({
+      type: 'content_block_start',
+      index: 0,
+      content_block: {
+        type: 'text',
+        text: '',
+      },
+    })
+
+    // Content delta - the actual message content
+    if (event.message.content) {
+      events.push({
+        type: 'content_block_delta',
+        index: 0,
+        delta: {
+          type: 'text_delta',
+          text: event.message.content,
+        },
+      })
+    }
+
+    // Content block stop
+    events.push({
+      type: 'content_block_stop',
+      index: 0,
+    })
+  }
 
   // Message delta with stop reason
   events.push({
