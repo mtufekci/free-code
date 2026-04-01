@@ -10,7 +10,7 @@
 - [x] **Phase 2: Core Chat Integration** - Streaming, completions, model discovery (completed 2026-04-01)
 - [x] **Phase 3: Tool Calling & Discovery** - Tool call support, context window detection (completed 2026-04-01)
 - [ ] **Phase 4: Zero-Config Experience** - Auto-detection and suggestions
-- [ ] **Phase 5: Polish & Edge Cases** - UX refinement
+- [x] **Phase 5: Polish & Edge Cases** - Edge case handling, UX polish, regression verification (Complete 2026-04-01)
 
 ## Phase Details
 
@@ -124,11 +124,11 @@ Plans:
 1. All Phase 1-4 success criteria continue to pass
 2. No regressions in existing cloud provider functionality
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 05-01-PLAN.md — Edge case handling (empty models, missing context window, connection drops)
-- [ ] 05-02-PLAN.md — UX polish and regression verification
+- [x] 05-01-PLAN.md — Edge case handling (empty models, missing context window, connection drops)
+- [x] 05-02-PLAN.md — UX polish and regression verification
 
 ---
 
@@ -140,7 +140,7 @@ Plans:
 | 2. Core Chat Integration | 5/5 | Complete   | 2026-04-01 |
 | 3. Tool Calling & Discovery | 4/5 | Complete    | 2026-04-01 |
 | 4. Zero-Config Experience | 1/1 | Complete | 2026-04-01 |
-| 5. Polish & Edge Cases | 0/2 | Not started | - |
+| 5. Polish & Edge Cases | 2/2 | Complete | 2026-04-01 |
 
 ## Coverage
 
