@@ -45,6 +45,7 @@ Progress: [██████░░░░] 52%
 | Phase 03-tool-calling-and-discovery P01 | 1 min | 1 task | 1 file |
 | Phase 03-tool-calling-and-discovery P02 | 2 min | 1 task | 1 file |
 | Phase 03-tool-calling-and-discovery P03 | 2 min | 1 task | 1 file |
+| Phase 03-tool-calling-and-discovery P04 | 1 min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
