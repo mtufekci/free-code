@@ -35,6 +35,8 @@ import {
 } from './settings/settings.js'
 import { createSignal } from './signal.js'
 
+let fastModeOllamaWarned = false
+
 export function isFastModeEnabled(): boolean {
   return !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_FAST_MODE)
 }
@@ -109,10 +111,17 @@ export function getFastModeUnavailableReason(): string | null {
     }
   }
 
-  // Only available for 1P (not Bedrock/Vertex/Foundry)
-  if (getAPIProvider() !== 'firstParty') {
-    const reason = 'Fast mode is not available on Bedrock, Vertex, or Foundry'
-    logForDebugging(`Fast mode unavailable: ${reason}`)
+  // Only available for 1P (not Bedrock/Vertex/Foundry/Ollama)
+  const provider = getAPIProvider()
+  if (provider !== 'firstParty') {
+    const reason = provider === 'ollama'
+      ? 'Fast mode is not available with Ollama'
+      : 'Fast mode is not available on Bedrock, Vertex, or Foundry'
+    // Only log once for Ollama to avoid debug spam
+    if (provider !== 'ollama' || !fastModeOllamaWarned) {
+      logForDebugging(`Fast mode unavailable: ${reason}`)
+      if (provider === 'ollama') fastModeOllamaWarned = true
+    }
     return reason
   }
 
@@ -411,6 +420,14 @@ export async function prefetchFastModeStatus(): Promise<void> {
   }
 
   if (!isFastModeEnabled()) {
+    return
+  }
+
+  // Skip prefetch for non-firstParty providers (Ollama, Bedrock, Vertex, Foundry)
+  // as fast mode is only available through Anthropic's API
+  const provider = getAPIProvider()
+  if (provider !== 'firstParty') {
+    orgStatus = { status: 'disabled', reason: 'preference' }
     return
   }
 

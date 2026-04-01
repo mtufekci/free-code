@@ -21,6 +21,13 @@ export type EffortValue = EffortLevel | number
 
 // @[MODEL LAUNCH]: Add the new model to the allowlist if it supports the effort parameter.
 export function modelSupportsEffort(model: string): boolean {
+  // Ollama: effort is an Anthropic-specific API parameter, but we use it
+  // internally to control thinking budget. Default true for Ollama (safe:
+  // the effort param is never sent to Ollama, only affects internal behavior).
+  if (getAPIProvider() === 'ollama') {
+    return true
+  }
+
   const m = model.toLowerCase()
   if (isEnvTruthy(process.env.CLAUDE_CODE_ALWAYS_ENABLE_EFFORT)) {
     return true

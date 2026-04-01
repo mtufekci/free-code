@@ -555,9 +555,15 @@ export async function runHeadless(
   headlessProfilerCheckpoint('runHeadless_entry')
 
   // Check Grove requirements for non-interactive consumer subscribers
-  if (await isQualifiedForGrove()) {
-    await checkGroveForNonInteractive()
+  logForDebugging('[runHeadless] before grove check')
+  try {
+    if (await isQualifiedForGrove()) {
+      await checkGroveForNonInteractive()
+    }
+  } catch (e) {
+    logForDebugging(`[runHeadless] grove check THREW: ${e}`)
   }
+  logForDebugging('[runHeadless] after grove check')
   headlessProfilerCheckpoint('after_grove_check')
 
   // Initialize GrowthBook so feature flags take effect in headless mode.
@@ -584,7 +590,9 @@ export async function runHeadless(
     return
   }
 
+  logForDebugging('[runHeadless] before getStructuredIO')
   const structuredIO = getStructuredIO(inputPrompt, options)
+  logForDebugging('[runHeadless] after getStructuredIO')
 
   // When emitting NDJSON for SDK clients, any stray write to stdout (debug
   // prints, dependency console.log, library banners) breaks the client's
@@ -678,6 +686,7 @@ export async function runHeadless(
   }
 
   headlessProfilerCheckpoint('before_loadInitialMessages')
+  logForDebugging('[runHeadless] before loadInitialMessages')
   const appState = getAppState()
   const {
     messages: initialMessages,
@@ -693,6 +702,8 @@ export async function runHeadless(
     sessionStartHooksPromise: options.sessionStartHooksPromise,
     restoredWorkerState: structuredIO.restoredWorkerState,
   })
+
+  logForDebugging(`[runHeadless] loadInitialMessages returned ${initialMessages.length} messages`)
 
   // SessionStart hooks can emit initialUserMessage — the first user turn for
   // headless orchestrator sessions where stdin is empty and additionalContext

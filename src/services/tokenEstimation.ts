@@ -147,6 +147,13 @@ export async function countMessagesTokensWithAPI(
       const betas = getModelBetas(model)
       const containsThinking = hasThinkingBlocks(messages)
 
+      if (getAPIProvider() === 'ollama') {
+        // Ollama doesn't have a countTokens API - use rough local estimation
+        return roughTokenCountEstimationForMessages(
+          messages.map(m => ({ type: m.role, message: { content: m.content } }))
+        )
+      }
+
       if (getAPIProvider() === 'bedrock') {
         // @anthropic-sdk/bedrock-sdk doesn't support countTokens currently
         return countTokensWithBedrock({
@@ -252,6 +259,13 @@ export async function countTokensViaHaikuFallback(
   messages: Anthropic.Beta.Messages.BetaMessageParam[],
   tools: Anthropic.Beta.Messages.BetaToolUnion[],
 ): Promise<number | null> {
+  // Ollama: use rough local estimation instead of wasting a model call
+  if (getAPIProvider() === 'ollama') {
+    return roughTokenCountEstimationForMessages(
+      messages.map(m => ({ type: m.role, message: { content: m.content } }))
+    )
+  }
+
   // Check if messages contain thinking blocks
   const containsThinking = hasThinkingBlocks(messages)
 

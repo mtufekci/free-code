@@ -61,6 +61,19 @@ const getRipgrepConfig = memoize((): RipgrepConfig => {
       ? path.resolve(rgRoot, `${process.arch}-win32`, 'rg.exe')
       : path.resolve(rgRoot, `${process.arch}-${process.platform}`, 'rg')
 
+  // Fallback to system ripgrep if the vendored binary doesn't exist
+  try {
+    const fs = require('fs')
+    if (!fs.existsSync(command)) {
+      const { cmd: systemPath } = findExecutable('rg', [])
+      if (systemPath !== 'rg') {
+        return { mode: 'system', command: 'rg', args: [] }
+      }
+    }
+  } catch {
+    // Ignore errors, proceed with builtin path
+  }
+
   return { mode: 'builtin', command, args: [] }
 })
 

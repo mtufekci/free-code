@@ -1,5 +1,6 @@
 import type { Buffer } from 'buffer'
 import { isInBundledMode } from '../../utils/bundledMode.js'
+import { join } from 'path'
 
 export type SharpInstance = {
   metadata(): Promise<{ width: number; height: number; format: string }>
@@ -34,57 +35,94 @@ type SharpCreator = (options: SharpCreatorOptions) => SharpInstance
 let imageProcessorModule: { default: SharpFunction } | null = null
 let imageCreatorModule: { default: SharpCreator } | null = null
 
+/**
+ * Try loading sharp via multiple strategies:
+ * 1. Direct import (works in dev/source mode)
+ * 2. require() from project node_modules (works in bundled mode)
+ * 3. require('sharp') from global (if installed globally)
+ */
+function tryLoadSharp(): unknown | null {
+  // Strategy 1: standard import/require
+  try {
+    return require('sharp')
+  } catch { /* continue */ }
+
+  // Strategy 2: load from the source project's node_modules
+  // The cli-dev binary is built from a known source directory
+  const candidatePaths: string[] = []
+
+  // Strategy 2a: relative to the binary's location
+  if (typeof process.argv[1] === 'string') {
+    const binaryDir = join(process.argv[1], '..')
+    candidatePaths.push(join(binaryDir, 'node_modules', 'sharp'))
+  }
+
+  // Strategy 2b: relative to cwd
+  candidatePaths.push(join(process.cwd(), 'node_modules', 'sharp'))
+
+  // Strategy 2c: relative to the source project root (for dev builds)
+  // The __dirname in bundled mode points to a virtual FS, so use
+  // well-known paths based on the binary name
+  if (typeof process.execPath === 'string') {
+    const execDir = join(process.execPath, '..')
+    candidatePaths.push(join(execDir, 'node_modules', 'sharp'))
+  }
+
+  for (const sharpPath of candidatePaths) {
+    try {
+      return require(sharpPath)
+    } catch { /* continue */ }
+  }
+
+  return null
+}
+
 export async function getImageProcessor(): Promise<SharpFunction> {
   if (imageProcessorModule) {
     return imageProcessorModule.default
   }
 
   if (isInBundledMode()) {
-    // Try to load the native image processor first
     try {
-      // Use the native image processor module
       const imageProcessor = await import('image-processor-napi')
       const sharp = imageProcessor.sharp || imageProcessor.default
       imageProcessorModule = { default: sharp }
       return sharp
-    } catch {
-      // Fall back to sharp if native module is not available
-      // biome-ignore lint/suspicious/noConsole: intentional warning
-      console.warn(
-        'Native image processor not available, falling back to sharp',
-      )
-    }
+    } catch { /* not available in this build */ }
   }
 
-  // Use sharp for non-bundled builds or as fallback.
-  // Single structural cast: our SharpFunction is a subset of sharp's actual type surface.
-  const imported = (await import(
-    'sharp'
-  )) as unknown as MaybeDefault<SharpFunction>
-  const sharp = unwrapDefault(imported)
-  imageProcessorModule = { default: sharp }
-  return sharp
+  const sharpMod = tryLoadSharp()
+  if (sharpMod) {
+    const sharp = unwrapDefault(sharpMod as MaybeDefault<SharpFunction>)
+    imageProcessorModule = { default: sharp }
+    return sharp
+  }
+
+  throw new Error(
+    'Image processing unavailable: install sharp in the project directory (bun add sharp)',
+  )
 }
 
 /**
  * Get image creator for generating new images from scratch.
- * Note: image-processor-napi doesn't support image creation,
- * so this always uses sharp directly.
  */
 export async function getImageCreator(): Promise<SharpCreator> {
   if (imageCreatorModule) {
     return imageCreatorModule.default
   }
 
-  const imported = (await import(
-    'sharp'
-  )) as unknown as MaybeDefault<SharpCreator>
-  const sharp = unwrapDefault(imported)
-  imageCreatorModule = { default: sharp }
-  return sharp
+  const sharpMod = tryLoadSharp()
+  if (sharpMod) {
+    const sharp = unwrapDefault(sharpMod as MaybeDefault<SharpCreator>)
+    imageCreatorModule = { default: sharp }
+    return sharp
+  }
+
+  throw new Error(
+    'Image creation unavailable: install sharp in the project directory (bun add sharp)',
+  )
 }
 
-// Dynamic import shape varies by module interop mode — ESM yields { default: fn }, CJS yields fn directly.
 type MaybeDefault<T> = T | { default: T }
 
 function unwrapDefault<T extends (...args: never[]) => unknown>(

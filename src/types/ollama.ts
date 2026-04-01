@@ -23,6 +23,7 @@ export interface OllamaMessage {
   role: 'user' | 'assistant' | 'system' | 'tool'
   content: string
   images?: string[]
+  thinking?: string
   tool_calls?: OllamaToolCall[]
   tool_call_id?: string
 }
@@ -50,7 +51,7 @@ export interface OllamaTool {
 export interface OllamaToolCall {
   function: {
     name: string
-    arguments: string // JSON string of arguments
+    arguments: string | Record<string, unknown>
   }
 }
 
@@ -112,13 +113,15 @@ export interface OllamaShowModelResponse {
     quantization_level: string
   }
   model_info?: Record<string, number | string>
+  capabilities?: string[]
 }
 
 /**
  * Context window size extracted from model info
  */
-export interface OllamaModelContextWindow {
+export interface OllamaModelCapabilities {
   contextWindow: number
   supportsVision: boolean
   supportsTools: boolean
+  supportsThinking: boolean
 }

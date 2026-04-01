@@ -2674,7 +2674,7 @@ export function normalizeContentFromAPI(
         // TODO: This needs patching as recursive fields can still be stringified
         let normalizedInput: unknown
         if (typeof contentBlock.input === 'string') {
-          const parsed = safeParseJSON(contentBlock.input)
+          const parsed = safeParseJSON(contentBlock.input, false)
           if (parsed === null && contentBlock.input.length > 0) {
             // TET/FC-v3 diagnostic: the streamed tool input JSON failed to
             // parse. We fall back to {} which means downstream validation
@@ -2738,7 +2738,7 @@ export function normalizeContentFromAPI(
         if (typeof contentBlock.input === 'string') {
           return {
             ...contentBlock,
-            input: (safeParseJSON(contentBlock.input) ?? {}) as {
+            input: (safeParseJSON(contentBlock.input, false) ?? {}) as {
               [key: string]: unknown
             },
           }

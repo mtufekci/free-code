@@ -22,8 +22,10 @@ const fullExperimentalFeatures = [
   'CCR_AUTO_CONNECT',
   'CCR_MIRROR',
   'CCR_REMOTE_SETUP',
+  'CHICAGO_MCP',
   'COMPACTION_REMINDERS',
   'CONNECTOR_TEXT',
+  'DUMP_SYSTEM_PROMPT',
   'EXTRACT_MEMORIES',
   'HISTORY_PICKER',
   'HOOK_PROMPTS',
@@ -47,7 +49,21 @@ const fullExperimentalFeatures = [
   'UNATTENDED_RETRY',
   'VERIFICATION_AGENT',
   'VOICE_MODE',
+  'WEB_BROWSER_TOOL',
 ] as const
+
+// Features with missing source files (stripped from source distribution):
+// 'WORKFLOW_SCRIPTS'   - src/tasks/LocalWorkflowTask/ missing
+// 'BG_SESSIONS'        - src/cli/bg.js missing
+// 'COMMIT_ATTRIBUTION' - src/utils/attributionTrailer.js missing
+// 'CONTEXT_COLLAPSE'   - src/tools/CtxInspectTool/ missing
+// 'DIRECT_CONNECT'     - incomplete source
+// 'HISTORY_SNIP'       - src/tools/SnipTool/ missing
+// 'MONITOR_TOOL'       - src/tools/MonitorTool/ missing
+// 'PROACTIVE'          - src/proactive/ missing
+// 'TERMINAL_PANEL'     - src/tools/TerminalCaptureTool/ missing
+// 'UPLOAD_USER_SETTINGS' - incomplete source
+// 'WEB_BROWSER_TOOL'   - src/tools/WebBrowserTool/ missing
 
 function runCommand(cmd: string[]): string | null {
   const proc = Bun.spawnSync({
@@ -79,7 +95,9 @@ function getVersionChangelog(): string {
   )
 }
 
-const defaultFeatures = ['VOICE_MODE']
+const defaultFeatures = dev
+  ? [...fullExperimentalFeatures]
+  : ['VOICE_MODE']
 const featureSet = new Set(defaultFeatures)
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i]

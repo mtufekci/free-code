@@ -32,6 +32,40 @@ import {
 } from './model.js'
 import { has1mContext } from '../context.js'
 import { getGlobalConfig } from '../config.js'
+import { isOllamaEnabled, listOllamaModels, getOllamaModel, getOllamaModelInfo, extractContextWindow, cacheOllamaModelCapabilities } from './ollama.js'
+
+let ollamaModelOptionsCache: ModelOption[] | null = null
+
+export async function initOllamaModelOptions(): Promise<void> {
+  if (!isOllamaEnabled()) return
+  try {
+    const result = await listOllamaModels()
+    const currentModel = getOllamaModel()
+    ollamaModelOptionsCache = result.models.map(m => ({
+      value: m.name,
+      label: m.name,
+      description: m.name === currentModel
+        ? 'Current model (Ollama)'
+        : `Ollama · ${formatOllamaSize(m.size)}`,
+    }))
+
+    // Pre-populate capabilities cache for the current model so that
+    // modelSupportsThinking/modelSupportsEffort work on the first query
+    const modelInfo = await getOllamaModelInfo(currentModel)
+    if (modelInfo) {
+      const caps = extractContextWindow(modelInfo)
+      cacheOllamaModelCapabilities(currentModel, caps)
+    }
+  } catch {
+    ollamaModelOptionsCache = null
+  }
+}
+
+function formatOllamaSize(bytes: number): string {
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`
+  if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(0)} MB`
+  return `${bytes} B`
+}
 
 // @[MODEL LAUNCH]: Update all the available and default model option strings below.
 
@@ -266,9 +300,31 @@ function getOpusPlanOption(): ModelOption {
   }
 }
 
+function getOllamaModelOptions(): ModelOption[] {
+  if (ollamaModelOptionsCache && ollamaModelOptionsCache.length > 0) {
+    const currentModel = getOllamaModel()
+    const currentInList = ollamaModelOptionsCache.some(o => o.value === currentModel)
+    if (currentInList) {
+      return ollamaModelOptionsCache
+    }
+    return [
+      { value: currentModel, label: currentModel, description: 'Current model (Ollama)' },
+      ...ollamaModelOptionsCache.filter(o => o.value !== currentModel),
+    ]
+  }
+  const currentModel = getOllamaModel()
+  return [
+    { value: currentModel, label: currentModel, description: 'Current model (Ollama)' },
+  ]
+}
+
 // @[MODEL LAUNCH]: Update the model picker lists below to include/reorder options for the new model.
 // Each user tier (ant, Max/Team Premium, Pro/Team Standard/Enterprise, PAYG 1P, PAYG 3P) has its own list.
 function getModelOptionsBase(fastMode = false): ModelOption[] {
+  if (getAPIProvider() === 'ollama') {
+    return getOllamaModelOptions()
+  }
+
   if (process.env.USER_TYPE === 'ant') {
     // Build options from antModels config
     const antModelOptions: ModelOption[] = getAntModels().map(m => ({

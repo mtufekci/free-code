@@ -98,6 +98,13 @@ export async function getAnthropicClient({
   fetchOverride?: ClientOptions['fetch']
   source?: string
 }): Promise<Anthropic> {
+  // Ollama early-return: skip all Anthropic auth checks (OAuth, API key,
+  // headers) since Ollama uses its own local endpoint. Must be first.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)) {
+    const { createOllamaClient } = await import('./ollama.js')
+    return createOllamaClient() as unknown as Anthropic
+  }
+
   const containerId = process.env.CLAUDE_CODE_CONTAINER_ID
   const remoteSessionId = process.env.CLAUDE_CODE_REMOTE_SESSION_ID
   const clientApp = process.env.CLAUDE_AGENT_SDK_CLIENT_APP
@@ -111,16 +118,13 @@ export async function getAnthropicClient({
     ...(remoteSessionId
       ? { 'x-claude-remote-session-id': remoteSessionId }
       : {}),
-    // SDK consumers can identify their app/library for backend analytics
     ...(clientApp ? { 'x-client-app': clientApp } : {}),
   }
 
-  // Log API client configuration for HFI debugging
   logForDebugging(
     `[API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: ${!!process.env.ANTHROPIC_CUSTOM_HEADERS}, has Authorization header: ${!!customHeaders['Authorization']}`,
   )
 
-  // Add additional protection header if enabled via env var
   const additionalProtectionEnabled = isEnvTruthy(
     process.env.CLAUDE_CODE_ADDITIONAL_PROTECTION,
   )
@@ -149,12 +153,6 @@ export async function getAnthropicClient({
     ...(resolvedFetch && {
       fetch: resolvedFetch,
     }),
-  }
-  // Check if Ollama should be used - must be before Bedrock/Foundry/Vertex checks
-  // because those env vars may also be set and we want Ollama to take precedence
-  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)) {
-    const { createOllamaClient } = await import('./ollama.js')
-    return createOllamaClient() as unknown as Anthropic
   }
 
   if (isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK)) {

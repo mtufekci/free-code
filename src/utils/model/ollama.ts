@@ -3,7 +3,7 @@ import { which } from '../which.js'
 import type {
   OllamaListModelsResponse,
   OllamaShowModelResponse,
-  OllamaModelContextWindow,
+  OllamaModelCapabilities,
 } from '../../types/ollama.js'
 
 /**
@@ -160,59 +160,87 @@ export async function getOllamaModelInfo(modelName: string): Promise<OllamaShowM
 }
 
 /**
- * Extract context window size from model info.
+ * Extract context window size and capabilities from Ollama model info.
  * Falls back to default (4096) if not determinable.
  *
- * @param modelInfo - Model info from Ollama API (can be null/undefined)
- * @returns Context window size and capabilities
+ * Ollama provides capabilities in two ways:
+ * 1. Top-level `capabilities` array: ["completion", "tools", "vision", "thinking"]
+ * 2. Architecture-prefixed keys in `model_info`: e.g. "llama.context_length", "deepseekocr.vision.block_count"
  */
-export function extractContextWindow(modelInfo: OllamaShowModelResponse | null | undefined): OllamaModelContextWindow {
-  // Default context window for Ollama
+export function extractContextWindow(modelInfo: OllamaShowModelResponse | null | undefined): OllamaModelCapabilities {
   const DEFAULT_CONTEXT_WINDOW = 4096
 
-  // Handle null/undefined modelInfo
   if (!modelInfo) {
     return {
       contextWindow: DEFAULT_CONTEXT_WINDOW,
       supportsVision: false,
       supportsTools: false,
+      supportsThinking: false,
     }
   }
 
-  // Extract context_length with defensive checks
+  // Extract context_length from model_info (keys are architecture-prefixed, e.g. "llama.context_length")
   let ctxLength: number | undefined
   if (modelInfo.model_info) {
-    // Try various field names Ollama might use
-    ctxLength = (modelInfo.model_info as Record<string, unknown>).context_length as number
-      ?? (modelInfo.model_info as Record<string, unknown>)['context_length'] as number
-      ?? (modelInfo.model_info as Record<string, unknown>)['contextWindow'] as number
-      ?? undefined
+    const info = modelInfo.model_info as Record<string, unknown>
+    for (const [key, val] of Object.entries(info)) {
+      if (key === 'context_length' || key.endsWith('.context_length')) {
+        if (typeof val === 'number' && val > 0) {
+          ctxLength = val
+          break
+        }
+      }
+    }
   }
 
-  // Validate ctxLength is a proper number
   const contextWindow = typeof ctxLength === 'number' && ctxLength > 0 ? ctxLength : DEFAULT_CONTEXT_WINDOW
 
-  // Check for vision capability
-  const supportsVision = Boolean(
-    modelInfo.model_info && (
-      (modelInfo.model_info as Record<string, unknown>).vision
-      ?? (modelInfo.model_info as Record<string, unknown>)['vision']
-    ),
-  )
+  // Primary: use top-level capabilities array (modern Ollama versions)
+  const caps = modelInfo.capabilities ?? []
+  if (caps.length > 0) {
+    return {
+      contextWindow,
+      supportsVision: caps.includes('vision'),
+      supportsTools: caps.includes('tools'),
+      supportsThinking: caps.includes('thinking'),
+    }
+  }
 
-  // Check for tool capability (future Phase 3)
-  const supportsTools = Boolean(
-    modelInfo.model_info && (
-      (modelInfo.model_info as Record<string, unknown>).tools
-      ?? (modelInfo.model_info as Record<string, unknown>)['tools']
-    ),
-  )
+  // Fallback: infer from model_info keys (older Ollama versions)
+  let hasVision = false
+  if (modelInfo.model_info) {
+    for (const key of Object.keys(modelInfo.model_info)) {
+      if (key.includes('.vision.') || key === 'vision') {
+        hasVision = true
+        break
+      }
+    }
+  }
 
   return {
     contextWindow,
-    supportsVision,
-    supportsTools,
+    supportsVision: hasVision,
+    supportsTools: false,
+    supportsThinking: false,
   }
+}
+
+// Cache of model capabilities, populated by getOllamaModelInfo + extractContextWindow
+const ollamaCapabilitiesCache = new Map<string, OllamaModelCapabilities>()
+
+/**
+ * Cache capabilities for a model. Called from createOllamaClient after fetching model info.
+ */
+export function cacheOllamaModelCapabilities(model: string, caps: OllamaModelCapabilities): void {
+  ollamaCapabilitiesCache.set(model, caps)
+}
+
+/**
+ * Get cached capabilities for an Ollama model (synchronous).
+ * Returns null if not yet cached. Call cacheOllamaModelCapabilities() first.
+ */
+export function getOllamaModelCapabilities(model: string): OllamaModelCapabilities | null {
+  return ollamaCapabilitiesCache.get(model) ?? null
 }
 
 /**

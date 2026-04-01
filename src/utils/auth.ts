@@ -115,7 +115,8 @@ export function isAnthropicAuthEnabled(): boolean {
   const is3P =
     isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY) ||
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)
 
   // Check if user has configured an external API key source
   // This allows externally-provided API keys to work (without requiring proxy configuration)
@@ -263,6 +264,16 @@ export function getAnthropicApiKeyWithSource(
   }
 
   if (isEnvTruthy(process.env.CI) || process.env.NODE_ENV === 'test') {
+    // 3P providers (Ollama, Bedrock, Vertex, Foundry) use their own auth
+    const is3PProvider =
+      isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
+      isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
+      isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY) ||
+      isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)
+    if (is3PProvider) {
+      return { key: null, source: 'none' }
+    }
+
     // Check for API key from file descriptor first
     const apiKeyFromFd = getApiKeyFromFileDescriptor()
     if (apiKeyFromFd) {

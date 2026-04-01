@@ -310,6 +310,18 @@ export function isToolSearchEnabledOptimistic(): boolean {
     return false
   }
 
+  // Ollama does not support tool_reference (Anthropic-specific beta feature).
+  // Disable tool search so all tools are sent inline with each request.
+  if (!process.env.ENABLE_TOOL_SEARCH && isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)) {
+    if (!loggedOptimistic) {
+      loggedOptimistic = true
+      logForDebugging(
+        `[ToolSearch:optimistic] disabled: Ollama does not support tool_reference. All tools sent inline.`,
+      )
+    }
+    return false
+  }
+
   if (!loggedOptimistic) {
     loggedOptimistic = true
     logForDebugging(

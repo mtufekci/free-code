@@ -34,6 +34,10 @@ export type ModelName = string
 export type ModelSetting = ModelName | ModelAlias | null
 
 export function getSmallFastModel(): ModelName {
+  if (getAPIProvider() === 'ollama') {
+    const { getOllamaModel } = require('../../utils/model/ollama.js') as typeof import('../../utils/model/ollama.js')
+    return getOllamaModel()
+  }
   return process.env.ANTHROPIC_SMALL_FAST_MODEL || getDefaultHaikuModel()
 }
 
@@ -90,6 +94,16 @@ export function getUserSpecifiedModelSetting(): ModelSetting | undefined {
  * @returns The resolved model name to use
  */
 export function getMainLoopModel(): ModelName {
+  // Ollama uses its own model names that don't map to Anthropic aliases
+  if (getAPIProvider() === 'ollama') {
+    const model = getUserSpecifiedModelSetting()
+    if (model !== undefined && model !== null) {
+      return String(model)
+    }
+    const { getOllamaModel } = require('../../utils/model/ollama.js') as typeof import('../../utils/model/ollama.js')
+    return getOllamaModel()
+  }
+
   const model = getUserSpecifiedModelSetting()
   if (model !== undefined && model !== null) {
     return parseUserSpecifiedModel(model)
@@ -98,11 +112,19 @@ export function getMainLoopModel(): ModelName {
 }
 
 export function getBestModel(): ModelName {
+  if (getAPIProvider() === 'ollama') {
+    const { getOllamaModel } = require('../../utils/model/ollama.js') as typeof import('../../utils/model/ollama.js')
+    return getOllamaModel()
+  }
   return getDefaultOpusModel()
 }
 
 // @[MODEL LAUNCH]: Update the default Opus model (3P providers may lag so keep defaults unchanged).
 export function getDefaultOpusModel(): ModelName {
+  if (getAPIProvider() === 'ollama') {
+    const { getOllamaModel } = require('../../utils/model/ollama.js') as typeof import('../../utils/model/ollama.js')
+    return getOllamaModel()
+  }
   if (process.env.ANTHROPIC_DEFAULT_OPUS_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_OPUS_MODEL
   }
@@ -117,6 +139,10 @@ export function getDefaultOpusModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Sonnet model (3P providers may lag so keep defaults unchanged).
 export function getDefaultSonnetModel(): ModelName {
+  if (getAPIProvider() === 'ollama') {
+    const { getOllamaModel } = require('../../utils/model/ollama.js') as typeof import('../../utils/model/ollama.js')
+    return getOllamaModel()
+  }
   if (process.env.ANTHROPIC_DEFAULT_SONNET_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_SONNET_MODEL
   }
@@ -129,6 +155,10 @@ export function getDefaultSonnetModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Haiku model (3P providers may lag so keep defaults unchanged).
 export function getDefaultHaikuModel(): ModelName {
+  if (getAPIProvider() === 'ollama') {
+    const { getOllamaModel } = require('../../utils/model/ollama.js') as typeof import('../../utils/model/ollama.js')
+    return getOllamaModel()
+  }
   if (process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL
   }
@@ -176,6 +206,12 @@ export function getRuntimeMainLoopModel(params: {
  * @returns The default model setting to use
  */
 export function getDefaultMainLoopModelSetting(): ModelName | ModelAlias {
+  // Ollama provider uses the configured Ollama model directly
+  if (getAPIProvider() === 'ollama') {
+    const { getOllamaModel } = require('../../utils/model/ollama.js') as typeof import('../../utils/model/ollama.js')
+    return getOllamaModel()
+  }
+
   // Ants default to defaultModel from flag config, or Opus 1M if not configured
   if (process.env.USER_TYPE === 'ant') {
     return (

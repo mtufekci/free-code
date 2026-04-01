@@ -3,6 +3,7 @@ import { stringWidth } from '../ink/stringWidth.js'
 import type { LogOption } from '../types/logs.js'
 import { getSubscriptionName, isClaudeAISubscriber } from './auth.js'
 import { getCwd } from './cwd.js'
+import { isOllamaEnabled } from './model/ollama.js'
 import { getDisplayPath } from './file.js'
 import {
   truncate,
@@ -256,9 +257,11 @@ export function getLogoDisplayData(): {
   const cwd = serverUrl
     ? `${displayPath} in ${serverUrl.replace(/^https?:\/\//, '')}`
     : displayPath
-  const billingType = isClaudeAISubscriber()
-    ? getSubscriptionName()
-    : 'API Usage Billing'
+  const billingType = isOllamaEnabled()
+    ? 'Ollama'
+    : isClaudeAISubscriber()
+      ? getSubscriptionName()
+      : 'API Usage Billing'
   const agentName = getInitialSettings().agent
 
   return {

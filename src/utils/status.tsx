@@ -244,7 +244,8 @@ export function buildAPIProviderProperties(): Property[] {
     const providerLabel = {
       bedrock: 'AWS Bedrock',
       vertex: 'Google Vertex AI',
-      foundry: 'Microsoft Foundry'
+      foundry: 'Microsoft Foundry',
+      ollama: 'Ollama (Local)',
     }[apiProvider];
     properties.push({
       label: 'API provider',
@@ -320,6 +321,15 @@ export function buildAPIProviderProperties(): Property[] {
         value: 'Microsoft Foundry auth skipped'
       });
     }
+  } else if (apiProvider === 'ollama') {
+    properties.push({
+      label: 'Ollama base URL',
+      value: process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
+    });
+    properties.push({
+      label: 'Ollama model',
+      value: process.env.OLLAMA_MODEL || 'minimax-m2.7:cloud'
+    });
   }
   const proxyUrl = getProxyUrl();
   if (proxyUrl) {

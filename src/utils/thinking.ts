@@ -88,6 +88,19 @@ export function getRainbowColor(
 // TODO(inigo): add support for probing unknown models via API error detection
 // Provider-aware thinking support detection (aligns with modelSupportsISP in betas.ts)
 export function modelSupportsThinking(model: string): boolean {
+  // Ollama: check model capabilities from /api/show cache.
+  // Default to true when cache is empty (safe: the thinking API param
+  // is ignored by translateRequestToOllama; Ollama models think natively).
+  if (getAPIProvider() === 'ollama') {
+    try {
+      const { getOllamaModelCapabilities } = require('./model/ollama.js') as typeof import('./model/ollama.js')
+      const caps = getOllamaModelCapabilities(model)
+      return caps?.supportsThinking ?? true
+    } catch {
+      return true
+    }
+  }
+
   const supported3P = get3PModelCapabilityOverride(model, 'thinking')
   if (supported3P !== undefined) {
     return supported3P
@@ -111,6 +124,10 @@ export function modelSupportsThinking(model: string): boolean {
 
 // @[MODEL LAUNCH]: Add the new model to the allowlist if it supports adaptive thinking.
 export function modelSupportsAdaptiveThinking(model: string): boolean {
+  // Ollama models don't support Anthropic's adaptive thinking API parameter
+  if (getAPIProvider() === 'ollama') {
+    return false
+  }
   const supported3P = get3PModelCapabilityOverride(model, 'adaptive_thinking')
   if (supported3P !== undefined) {
     return supported3P

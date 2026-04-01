@@ -1849,8 +1849,12 @@ async function* queryModel(
     do {
       e = await generator.next()
 
-      // yield API error messages (the stream has a 'controller' property, error messages don't)
-      if (!('controller' in e.value)) {
+      // yield API error messages only when e.done is false (yielded values).
+      // When e.done is true, e.value is the return value (the stream itself),
+      // not an error message. The 'controller' check handles Anthropic's Stream
+      // class; the e.done check is needed for Ollama's AsyncGenerator which
+      // lacks a 'controller' property.
+      if (!e.done && !('controller' in e.value)) {
         yield e.value
       }
     } while (!e.done)

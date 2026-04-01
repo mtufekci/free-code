@@ -36,6 +36,7 @@ import { launchRepl } from './replLauncher.js';
 import { hasGrowthBookEnvOverride, initializeGrowthBook, refreshGrowthBookAfterAuthChange } from './services/analytics/growthbook.js';
 import { fetchBootstrapData } from './services/api/bootstrap.js';
 import { type DownloadResult, downloadSessionFiles, type FilesApiConfig, parseFileSpecs } from './services/api/filesApi.js';
+import { initOllamaModelOptions } from './utils/model/modelOptions.js';
 import { prefetchPassesEligibility } from './services/api/referral.js';
 import { prefetchOfficialMcpUrls } from './services/mcp/officialRegistry.js';
 import type { McpSdkServerConfig, McpServerConfig, ScopedMcpServerConfig } from './services/mcp/types.js';
@@ -1864,6 +1865,9 @@ async function run(): Promise<CommanderCommand> {
     // Activate proactive mode BEFORE getTools() so SleepTool.isEnabled()
     // (which returns isProactiveActive()) passes and Sleep is included.
     // The later REPL-path maybeActivateProactive() calls are idempotent.
+    // Activate proactive mode BEFORE getTools() so SleepTool.isEnabled()
+    // (which returns isProactiveActive()) passes and Sleep is included.
+    // The later REPL-path maybeActivateProactive() calls are idempotent.
     maybeActivateProactive(options);
     let tools = getTools(toolPermissionContext);
 
@@ -2026,7 +2030,11 @@ async function run(): Promise<CommanderCommand> {
     const commandsStart = Date.now();
     // Join the promises kicked before setup() (or start fresh if
     // worktreeEnabled gated the early kick). Both memoized by cwd.
-    const [commands, agentDefinitionsResult] = await Promise.all([commandsPromise ?? getCommands(currentCwd), agentDefsPromise ?? getAgentDefinitionsWithOverrides(currentCwd)]);
+    logForDebugging('[STARTUP] Awaiting commandsPromise...');
+    const commands = await (commandsPromise ?? getCommands(currentCwd));
+    logForDebugging(`[STARTUP] Commands loaded in ${Date.now() - commandsStart}ms`);
+    logForDebugging('[STARTUP] Awaiting agentDefsPromise...');
+    const agentDefinitionsResult = await (agentDefsPromise ?? getAgentDefinitionsWithOverrides(currentCwd));
     logForDebugging(`[STARTUP] Commands and agents loaded in ${Date.now() - commandsStart}ms`);
     profileCheckpoint('action_commands_loaded');
 
@@ -2341,6 +2349,9 @@ async function run(): Promise<CommanderCommand> {
     // --bare / SIMPLE: skip — these are cache-warms for the REPL's
     // first-turn responsiveness (quota, passes, fastMode, bootstrap data). Fast
     // mode doesn't apply to the Agent SDK anyway (see getFastModeUnavailableReason).
+    // Pre-fetch Ollama model list for the model picker (local server, no throttle needed).
+    void initOllamaModelOptions();
+
     const bgRefreshThrottleMs = getFeatureValue_CACHED_MAY_BE_STALE('tengu_cicada_nap_ms', 0);
     const lastPrefetched = getGlobalConfig().startupPrefetchedAt ?? 0;
     const skipStartupPrefetches = isBareMode() || bgRefreshThrottleMs > 0 && Date.now() - lastPrefetched < bgRefreshThrottleMs;
@@ -2555,8 +2566,20 @@ async function run(): Promise<CommanderCommand> {
     if (isBareMode()) {
       // skip — no-op
     } else if (isNonInteractiveSession) {
-      // In headless mode, await to ensure plugin sync completes before CLI exits
-      await initializeVersionedPlugins();
+      // In headless mode, await plugin sync with timeout to prevent hangs
+      const PLUGIN_INIT_TIMEOUT_MS = 5_000;
+      let pluginTimer: ReturnType<typeof setTimeout> | undefined;
+      const pluginInit = initializeVersionedPlugins();
+      const pluginTimedOut = await Promise.race([
+        pluginInit.then(() => false),
+        new Promise<boolean>(resolve => {
+          pluginTimer = setTimeout(r => r(true), PLUGIN_INIT_TIMEOUT_MS, resolve);
+        }),
+      ]);
+      if (pluginTimer) clearTimeout(pluginTimer);
+      if (pluginTimedOut) {
+        logForDebugging(`[STARTUP] Plugin init timed out after ${PLUGIN_INIT_TIMEOUT_MS}ms — proceeding`);
+      }
       profileCheckpoint('action_after_plugins_init');
       void cleanupOrphanedPluginVersionsInBackground().then(() => getGlobExclusionsForPluginCache());
     } else {
@@ -2610,8 +2633,16 @@ async function run(): Promise<CommanderCommand> {
       // rejection — this just prevents the spurious global handler fire.
       sessionStartHooksPromise?.catch(() => {});
       profileCheckpoint('before_validateForceLoginOrg');
+      logForDebugging('[HEADLESS] before validateForceLoginOrg');
       // Validate org restriction for non-interactive sessions
-      const orgValidation = await validateForceLoginOrg();
+      let orgValidation: { valid: boolean; message: string };
+      try {
+        orgValidation = await validateForceLoginOrg();
+      } catch (e) {
+        logForDebugging(`[HEADLESS] validateForceLoginOrg THREW: ${e}`);
+        orgValidation = { valid: true, message: '' };
+      }
+      logForDebugging(`[HEADLESS] validateForceLoginOrg returned valid=${orgValidation.valid}`);
       if (!orgValidation.valid) {
         process.stderr.write(orgValidation.message + '\n');
         process.exit(1);
@@ -2726,8 +2757,22 @@ async function run(): Promise<CommanderCommand> {
       // fetch was kicked off early (line ~2558) so only residual time blocks
       // here. --bare skips claude.ai entirely for perf-sensitive scripts.
       profileCheckpoint('before_connectMcp');
-      await connectMcpBatch(regularMcpConfigs, 'regular');
+      logForDebugging('[HEADLESS] before regular MCP connect');
+      const REGULAR_MCP_TIMEOUT_MS = 10_000;
+      let regularMcpTimer: ReturnType<typeof setTimeout> | undefined;
+      const regularMcpConnect = connectMcpBatch(regularMcpConfigs, 'regular');
+      const regularMcpTimedOut = await Promise.race([
+        regularMcpConnect.then(() => false),
+        new Promise<boolean>(resolve => {
+          regularMcpTimer = setTimeout(r => r(true), REGULAR_MCP_TIMEOUT_MS, resolve);
+        }),
+      ]);
+      if (regularMcpTimer) clearTimeout(regularMcpTimer);
+      if (regularMcpTimedOut) {
+        logForDebugging(`[MCP] Regular MCP servers not ready after ${REGULAR_MCP_TIMEOUT_MS}ms — proceeding; background connection continues`);
+      }
       profileCheckpoint('after_connectMcp');
+      logForDebugging(`[HEADLESS] regular MCP done, timedOut=${regularMcpTimedOut}`);
       // Dedup: suppress plugin MCP servers that duplicate a claude.ai
       // connector (connector wins), then connect claude.ai servers.
       // Bounded wait — #23725 made this blocking so single-turn -p sees
@@ -2807,6 +2852,7 @@ async function run(): Promise<CommanderCommand> {
         logForDebugging(`[MCP] claude.ai connectors not ready after ${CLAUDE_AI_MCP_TIMEOUT_MS}ms — proceeding; background connection continues`);
       }
       profileCheckpoint('after_connectMcp_claudeai');
+      logForDebugging(`[HEADLESS] claudeai MCP done, timedOut=${claudeaiTimedOut}`);
 
       // In headless mode, start deferred prefetches immediately (no user typing delay)
       // --bare / SIMPLE: startDeferredPrefetches early-returns internally.
@@ -2820,11 +2866,18 @@ async function run(): Promise<CommanderCommand> {
           void import('./utils/sdkHeapDumpMonitor.js').then(m => m.startSdkMemoryMonitor());
         }
       }
-      logSessionTelemetry();
+      logForDebugging('[HEADLESS] before logSessionTelemetry');
+      try {
+        logSessionTelemetry();
+      } catch (e) {
+        logForDebugging(`[HEADLESS] logSessionTelemetry THREW: ${e}`);
+      }
+      logForDebugging('[STARTUP] Importing print.js...');
       profileCheckpoint('before_print_import');
       const {
         runHeadless
       } = await import('src/cli/print.js');
+      logForDebugging('[STARTUP] print.js imported, calling runHeadless...');
       profileCheckpoint('after_print_import');
       void runHeadless(inputPrompt, () => headlessStore.getState(), headlessStore.setState, commandsHeadless, tools, sdkMcpConfigs, agentDefinitions.activeAgents, {
         continue: options.continue,

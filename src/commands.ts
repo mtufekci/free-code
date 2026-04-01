@@ -447,25 +447,34 @@ export function meetsAvailabilityRequirement(cmd: Command): boolean {
  * because loading is expensive (disk I/O, dynamic imports).
  */
 const loadAllCommands = memoize(async (cwd: string): Promise<Command[]> => {
-  const [
-    { skillDirCommands, pluginSkills, bundledSkills, builtinPluginSkills },
-    pluginCommands,
-    workflowCommands,
-  ] = await Promise.all([
-    getSkills(cwd),
-    getPluginCommands(),
-    getWorkflowCommands ? getWorkflowCommands(cwd) : Promise.resolve([]),
-  ])
+  logForDebugging('[loadAllCommands] Starting sequential awaits...')
+  const { skillDirCommands, pluginSkills, bundledSkills, builtinPluginSkills } = await getSkills(cwd)
+  logForDebugging('[loadAllCommands] getSkills done')
+  const pluginCommands = await getPluginCommands()
+  logForDebugging('[loadAllCommands] getPluginCommands done')
+  const workflowCommands = getWorkflowCommands ? await getWorkflowCommands(cwd) : []
+  logForDebugging('[loadAllCommands] workflows done')
 
-  return [
+  logForDebugging('[loadAllCommands] Building result array...')
+  let builtInCmds: Command[]
+  try {
+    builtInCmds = COMMANDS()
+    logForDebugging(`[loadAllCommands] COMMANDS() returned ${builtInCmds.length} items`)
+  } catch (e) {
+    logForDebugging(`[loadAllCommands] COMMANDS() THREW: ${e}`)
+    builtInCmds = []
+  }
+  const result = [
     ...bundledSkills,
     ...builtinPluginSkills,
     ...skillDirCommands,
     ...workflowCommands,
     ...pluginCommands,
     ...pluginSkills,
-    ...COMMANDS(),
+    ...builtInCmds,
   ]
+  logForDebugging(`[loadAllCommands] Returning ${result.length} total commands`)
+  return result
 })
 
 /**
