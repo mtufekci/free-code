@@ -82,16 +82,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONN-01 | Phase 1 | Complete |
 | CONN-02 | Phase 1 | Partial - plan specifies warn-and-continue (not fail-fast) |
 | CONN-03 | Phase 1 | Complete |
-| CHAT-01 | Phase 2 | Pending |
-| CHAT-02 | Phase 2 | Pending |
-| CHAT-03 | Phase 2 | Pending |
-| CHAT-04 | Phase 2 | Pending |
-| TOOL-01 | Phase 3 | Pending |
+| CHAT-01 | Phase 2 | Complete |
+| CHAT-02 | Phase 2 | Complete |
+| CHAT-03 | Phase 2 | Complete |
+| CHAT-04 | Phase 2 | Complete |
+| TOOL-01 | Phase 3 | Complete |
 | TOOL-02 | Phase 3 | Complete |
 | TOOL-03 | Phase 3 | Complete |
-| TOOL-04 | Phase 3 | Pending |
-| MODL-01 | Phase 2 | Pending |
-| MODL-02 | Phase 2 | Pending |
+| TOOL-04 | Phase 3 | Complete |
+| MODL-01 | Phase 2 | Complete |
+| MODL-02 | Phase 2 | Complete |
 | MODL-03 | Phase 3 | Complete |
 | MODL-04 | Phase 2 | Complete |
 | ERR-01 | Phase 1 | Complete |
