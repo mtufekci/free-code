@@ -12,7 +12,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PROV-01**: User can enable Ollama by setting `CLAUDE_CODE_USE_OLLAMA=true`
 - [x] **PROV-02**: User can configure Ollama base URL via `OLLAMA_BASE_URL` env var (defaults to `http://localhost:11434`)
 - [x] **PROV-03**: User can configure Ollama model via `OLLAMA_MODEL` env var (defaults to auto-detected)
-- [ ] **PROV-04**: System detects `OLLAMA_BASE_URL` or local Ollama CLI presence and suggests enabling Ollama
+- [x] **PROV-04**: System detects `OLLAMA_BASE_URL` or local Ollama CLI presence and suggests enabling Ollama
 
 ### Connection & Health
 
@@ -22,22 +22,22 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Chat Completions
 
-- [ ] **CHAT-01**: User can send prompts and receive responses from Ollama models
-- [ ] **CHAT-02**: Streaming responses render correctly in the terminal REPL
-- [ ] **CHAT-03**: Ollama response format is translated to match expected internal event shape
-- [ ] **CHAT-04**: Connection handles Ollama keep-alive and session persistence
+- [x] **CHAT-01**: User can send prompts and receive responses from Ollama models
+- [x] **CHAT-02**: Streaming responses render correctly in the terminal REPL
+- [x] **CHAT-03**: Ollama response format is translated to match expected internal event shape
+- [x] **CHAT-04**: Connection handles Ollama keep-alive and session persistence
 
 ### Tool Calling ( Ollama Models That Support It)
 
 - [x] **TOOL-01**: Tool call requests are formatted for Ollama's `tool_calls` API
 - [x] **TOOL-02**: Ollama tool call responses are translated to internal format
 - [x] **TOOL-03**: System detects when model does not support tools and falls back gracefully
-- [ ] **TOOL-04**: Tool calling is disabled for known-unsupported models with user-visible notice
+- [x] **TOOL-04**: Tool calling is disabled for known-unsupported models with user-visible notice
 
 ### Model Discovery
 
-- [ ] **MODL-01**: System can list available Ollama models via `/api/tags`
-- [ ] **MODL-02**: System detects model context window size from Ollama API
+- [x] **MODL-01**: System can list available Ollama models via `/api/tags`
+- [x] **MODL-02**: System detects model context window size from Ollama API
 - [x] **MODL-03**: Context window limits are respected to prevent silent truncation
 - [x] **MODL-04**: User can see which model is active and its capabilities in the REPL
 
@@ -78,7 +78,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROV-01 | Phase 1 | Complete |
 | PROV-02 | Phase 1 | Complete |
 | PROV-03 | Phase 1 | Complete |
-| PROV-04 | Phase 4 | Pending |
+| PROV-04 | Phase 4 | Complete |
 | CONN-01 | Phase 1 | Complete |
 | CONN-02 | Phase 1 | Partial - plan specifies warn-and-continue (not fail-fast) |
 | CONN-03 | Phase 1 | Complete |

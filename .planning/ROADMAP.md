@@ -137,8 +137,8 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Health Check | 3/3 | Complete | 2026-03-31 |
-| 2. Core Chat Integration | 5/5 | Complete   | 2026-04-01 |
-| 3. Tool Calling & Discovery | 4/5 | Complete    | 2026-04-01 |
+| 2. Core Chat Integration | 5/5 | Complete | 2026-04-01 |
+| 3. Tool Calling & Discovery | 5/5 | Complete | 2026-04-01 |
 | 4. Zero-Config Experience | 1/1 | Complete | 2026-04-01 |
 | 5. Polish & Edge Cases | 2/2 | Complete | 2026-04-01 |
 
