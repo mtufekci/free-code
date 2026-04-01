@@ -23,6 +23,7 @@ import { isFullscreenEnvEnabled } from '../utils/fullscreen.js';
 import { createBaseHookInput, executeStatusLineCommand } from '../utils/hooks.js';
 import { getLastAssistantMessage } from '../utils/messages.js';
 import { getRuntimeMainLoopModel, type ModelName, renderModelName } from '../utils/model/model.js';
+import { isOllamaEnabled, getOllamaModel } from '../utils/model/ollama.js';
 import { getCurrentSessionTitle } from '../utils/sessionStorage.js';
 import { doesMostRecentAssistantMessageExceed200k, getCurrentUsage } from '../utils/tokens.js';
 import { getCurrentWorktreeSession } from '../utils/worktree.js';
@@ -69,7 +70,7 @@ function buildStatusLineCommandInput(permissionMode: PermissionMode, exceeds200k
     }),
     model: {
       id: runtimeModel,
-      display_name: renderModelName(runtimeModel)
+      display_name: isOllamaEnabled() ? `[ollama:${getOllamaModel()}] ${renderModelName(runtimeModel)}` : renderModelName(runtimeModel)
     },
     workspace: {
       current_dir: getCwd(),
