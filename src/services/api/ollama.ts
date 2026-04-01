@@ -16,8 +16,11 @@ import type {
   OllamaChatResponse,
   OllamaMessage,
 } from 'src/types/ollama.js'
-import { getOllamaBaseURL, getOllamaModel, getOllamaModelInfo, extractContextWindow } from 'src/utils/model/ollama.js'
+import { getOllamaBaseURL, getOllamaModel, getOllamaModelInfo, extractContextWindow, getToolCapabilityMessage } from 'src/utils/model/ollama.js'
 import { formatOllamaConnectionError } from 'src/services/api/errorUtils.js'
+
+// Track if we've already warned about tools being disabled for this session
+let hasWarnedAboutToolsDisabled = false
 
 /**
  * Anthropic BetaRawMessageStreamEvent types
@@ -496,6 +499,13 @@ export function createOllamaClient(): {
                 const extracted = extractContextWindow(modelInfo)
                 contextWindow = extracted.contextWindow
                 supportsTools = extracted.supportsTools ?? false
+
+                // Warn once per session when tools are disabled
+                if (!supportsTools && !hasWarnedAboutToolsDisabled && params.tools && params.tools.length > 0) {
+                  const { message } = getToolCapabilityMessage(modelInfo)
+                  console.warn(`[Ollama] ${message}`)
+                  hasWarnedAboutToolsDisabled = true
+                }
               } catch {
                 // Model info fetch failed - continue without num_ctx and without tools (safer defaults)
                 console.warn(`[Ollama] Failed to get model info for ${params.model}, proceeding without num_ctx and without tools`)
