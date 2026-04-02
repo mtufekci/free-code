@@ -17,6 +17,7 @@ export interface OllamaChatRequest {
   format?: 'json' | ''
   tools?: OllamaTool[]
   keep_alive?: number | string
+  think?: boolean
 }
 
 export interface OllamaMessage {
@@ -32,6 +33,7 @@ export interface OllamaOptions {
   temperature?: number
   top_p?: number
   num_predict?: number // maps from max_tokens
+  num_ctx?: number
   stop?: string | string[]
   repeat_penalty?: number
   frequency_penalty?: number

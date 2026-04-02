@@ -128,8 +128,8 @@ export interface MessageCreateParams {
   }>
   tool_choice?: { type: 'auto' | 'any' | 'none' }
   thinking?: {
-    type: 'enabled'
-    budget_tokens: number
+    type: 'enabled' | 'adaptive' | 'disabled'
+    budget_tokens?: number
   }
   metadata?: Record<string, string>
 }
@@ -254,6 +254,9 @@ function translateRequestToOllama(
       // Enforce context window to prevent silent truncation
       ...(contextWindow && contextWindow > 0 ? { num_ctx: contextWindow } : {}),
     },
+    // Enable thinking mode for Ollama models that support it (qwen3, deepseek-r1, etc.)
+    // Ollama uses `think: true` in the request body, not in options
+    ...(params.thinking && params.thinking.type !== 'disabled' ? { think: true } : {}),
   }
 
   // Translate Anthropic tools to Ollama format (OpenAI-compatible function calling)
@@ -792,7 +795,7 @@ export function createOllamaClient(): {
                 const extra = (m as any).tool_calls ? `+${(m as any).tool_calls.length}tc` : ''
                 return `${m.role}${extra}`
               }).join(',')
-              logForDebugging(`[Ollama] Messages: [${msgRoles}]`)
+              logForDebugging(`[Ollama] Messages: [${msgRoles}], think=${ollamaRequest.think ?? false}`)
               if (ollamaRequest.tools && ollamaRequest.tools.length > 0) {
                 const toolNames = ollamaRequest.tools.map(t => t.function.name).join(', ')
                 logForDebugging(`[Ollama] Sending ${ollamaRequest.tools.length} tools: ${toolNames}`)

@@ -3,6 +3,7 @@ import type { UUID } from 'crypto'
 import { randomUUID } from 'crypto'
 import uniqBy from 'lodash-es/uniqBy.js'
 import { logForDebugging } from 'src/utils/debug.js'
+import { getAPIProvider } from 'src/utils/model/providers.js'
 import { getProjectRoot, getSessionId } from '../../bootstrap/state.js'
 import { getCommand, getSkillToolCommands, hasCommand } from '../../commands.js'
 import {
@@ -679,9 +680,14 @@ export async function* runAgent({
     // For fork children (useExactTools), inherit thinking config to match the
     // parent's API request prefix for prompt cache hits. For regular
     // sub-agents, disable thinking to control output token costs.
+    // Exception: Ollama models need thinking enabled because `think: true` is
+    // the only mechanism for deep reasoning -- there's no server-side effort
+    // parameter like the Anthropic API has.
     thinkingConfig: useExactTools
       ? toolUseContext.options.thinkingConfig
-      : { type: 'disabled' as const },
+      : getAPIProvider() === 'ollama'
+        ? toolUseContext.options.thinkingConfig
+        : { type: 'disabled' as const },
     mcpClients: mergedMcpClients,
     mcpResources: toolUseContext.options.mcpResources,
     agentDefinitions: toolUseContext.options.agentDefinitions,

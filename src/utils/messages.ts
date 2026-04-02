@@ -82,6 +82,7 @@ import {
 } from './attachments.js'
 import { quote } from './bash/shellQuote.js'
 import { formatNumber, formatTokens } from './format.js'
+import { getAPIProvider } from './model/providers.js'
 import { getPewterLedgerVariant } from './planModeV2.js'
 import { jsonStringify } from './slowOperations.js'
 
@@ -4168,9 +4169,19 @@ You have exited auto mode. The user may now want to interact more directly. You 
       ])
     }
     case 'ultrathink_effort': {
+      const isOllama = getAPIProvider() === 'ollama'
+      const effortContent = isOllama
+        ? `The user has requested MAXIMUM reasoning effort for this turn. You MUST be extremely thorough:
+- Use tools extensively: read files, search the codebase, check git history (git log, git diff, git blame), run tests
+- Do NOT give quick or shallow answers — investigate deeply before responding
+- Check multiple sources of information, cross-reference findings
+- If the task involves code, read the relevant files, understand the full context, check related files
+- Explore edge cases, error handling, and potential issues
+- Provide comprehensive, well-researched responses with specific file paths, line numbers, and evidence`
+        : `The user has requested reasoning effort level: ${attachment.level}. Apply this to the current turn.`
       return wrapMessagesInSystemReminder([
         createUserMessage({
-          content: `The user has requested reasoning effort level: ${attachment.level}. Apply this to the current turn.`,
+          content: effortContent,
           isMeta: true,
         }),
       ])
